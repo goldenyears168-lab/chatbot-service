@@ -172,54 +172,34 @@ export async function node_validateRequest(ctx: PipelineContext): Promise<Pipeli
     }
   }
 
-  // 8. 驗證 mode 值
-  if (body.mode && !['auto', 'decision_recommendation', 'faq_flow_price'].includes(body.mode)) {
+  // 8. mode / source / pageType 放寬：僅檢查型別，不做白名單
+  if (body.mode && typeof body.mode !== 'string') {
     return new Response(
       JSON.stringify({ 
         error: 'Invalid request', 
-        message: 'mode 值不正確' 
+        message: 'mode 型別不正確' 
       }),
-      { 
-        status: 400, 
-        headers: { 
-          ...ctx.corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
+      { status: 400, headers: { ...ctx.corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
-  // 9. 驗證 source 值
-  if (body.source && !['menu', 'input'].includes(body.source)) {
+  if (body.source && typeof body.source !== 'string') {
     return new Response(
       JSON.stringify({ 
         error: 'Invalid request', 
-        message: 'source 值不正確' 
+        message: 'source 型別不正確' 
       }),
-      { 
-        status: 400, 
-        headers: { 
-          ...ctx.corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
+      { status: 400, headers: { ...ctx.corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
-  // 10. 驗證 pageType 值（容忍 demo/embed）
-  if (body.pageType && !['home', 'qa', 'demo', 'embed'].includes(body.pageType)) {
+  if (body.pageType && typeof body.pageType !== 'string') {
     return new Response(
       JSON.stringify({ 
         error: 'Invalid request', 
-        message: 'pageType 值不正確' 
+        message: 'pageType 型別不正確' 
       }),
-      { 
-        status: 400, 
-        headers: { 
-          ...ctx.corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
+      { status: 400, headers: { ...ctx.corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
