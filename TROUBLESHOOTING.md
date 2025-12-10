@@ -170,3 +170,4 @@ curl -X POST https://chatbot-service-9qg.pages.dev/api/goldenyears/chat \
 
 **最后更新**: 2025-12-10  
 **状态**: 等待配置构建命令并重新部署
+
