@@ -126,6 +126,7 @@ export async function onRequestPost(context: {
       conversationId: '',
       updatedContext: {},
       startTime,
+      logs: [],
     };
 
     // 8. 执行 Pipeline
