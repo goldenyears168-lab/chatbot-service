@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Service - Multi-Tenant Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .status {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+        
+        .endpoints {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .endpoints h2 {
+            color: #374151;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .endpoint {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .endpoint:last-child {
+            margin-bottom: 0;
+        }
+        
+        .endpoint-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            background: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #1f2937;
+            word-break: break-all;
+        }
+        
+        .info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        
+        .info h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        
+        .info p {
+            color: #1e3a8a;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #9ca3af;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="center">
+            <span class="status">✓ Service Online</span>
+        </div>
+        
+        <h1>🤖 Chatbot Service</h1>
+        <p class="subtitle">多租户聊天机器人微服务平台</p>
+        
+        <div class="info">
+            <h3>🎉 部署成功！</h3>
+            <p>
+                多租户 Chatbot Service 已成功部署到 Cloudflare Pages。
+                此服务为多个公司提供 AI 聊天机器人功能，支持独立的知识库和配置管理。
+            </p>
+        </div>
+        
+        <div class="endpoints">
+            <h2>📡 API 端点</h2>
+            
+            <div class="endpoint">
+                <div class="endpoint-title">聊天 API</div>
+                <div class="endpoint-path">POST /api/{company}/chat</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-title">FAQ 菜单</div>
+                <div class="endpoint-path">GET /api/{company}/faq-menu</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-title">Widget 加载器</div>
+                <div class="endpoint-path">GET /widget/loader.js</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-title">Widget 主文件</div>
+                <div class="endpoint-path">GET /widget/widget.js</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-title">Widget 样式</div>
+                <div class="endpoint-path">GET /widget/widget.css</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-title">知识库</div>
+                <div class="endpoint-path">GET /knowledge/{company}/*.json</div>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h3>🔧 配置提醒</h3>
+            <p>
+                请确保在 Cloudflare Dashboard 中设置了 <code>GEMINI_API_KEY</code> 环境变量。
+                前往：Workers & Pages → chatbot-service-multi-tenant → Settings → Environment variables
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Powered by Cloudflare Pages | Version 2.0.0</p>
+        </div>
+    </div>
+</body>
+</html>

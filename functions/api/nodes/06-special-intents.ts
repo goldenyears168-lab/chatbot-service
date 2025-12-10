@@ -4,7 +4,7 @@
  */
 
 import { PipelineContext } from '../lib/pipeline.js';
-import { buildResponse } from '../chat.js';
+import { buildResponse } from '../lib/chatHelpers.js';
 import { getLineInquiryTemplate, getComplaintTemplate, getHandoffTemplate } from '../lib/responseTemplates.js';
 
 /**

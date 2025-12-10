@@ -1,0 +1,25 @@
+# Wrangler 忽略文件
+# 避免监视过多文件
+
+# 备份目录
+goldenyears/
+
+# 文档
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Node
+node_modules/
+package-lock.json
+
+# 测试
+__tests__/
+*.test.ts
+
+# 临时文件
+*.log
+.DS_Store

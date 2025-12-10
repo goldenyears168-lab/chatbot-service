@@ -200,6 +200,7 @@ export interface StateTransitionsConfig {
 }
 
 export class KnowledgeBase {
+  private companyId: string;
   private services: Service[] = [];
   private personas: Persona[] = [];
   private policies: Policy[] = [];
@@ -213,6 +214,10 @@ export class KnowledgeBase {
   private entityPatterns: EntityPatterns | null = null;
   private stateTransitionsConfig: StateTransitionsConfig | null = null;
   private loaded = false;
+
+  constructor(companyId: string = 'goldenyears') {
+    this.companyId = companyId;
+  }
 
   /**
    * 載入所有知識庫資料
@@ -248,15 +253,19 @@ export class KnowledgeBase {
         }
       }
       
+      // 多租户：使用公司特定的知识库路径
+      const knowledgePath = `/knowledge/${this.companyId}/`;
+      console.log(`[Knowledge] Loading knowledge base for company: ${this.companyId}`);
+      
       // 確保 baseUrl 不以 / 結尾（因為路徑已經包含 /）
       if (fetchBaseUrl && fetchBaseUrl.endsWith('/')) {
         fetchBaseUrl = fetchBaseUrl.slice(0, -1);
       }
       
-      // 構建完整的知識庫文件路徑
-      const knowledgeBasePath = `${fetchBaseUrl}/knowledge`;
+      // 構建完整的知識庫文件路徑（多租户）
+      const knowledgeBasePath = `${fetchBaseUrl}${knowledgePath}`.replace(/\/$/, '');
       
-      console.log('[Knowledge] Loading knowledge files from:', knowledgeBasePath || '/knowledge (relative)');
+      console.log('[Knowledge] Loading knowledge files from:', knowledgeBasePath);
       
       // 使用 fetch 載入所有 JSON 文件
       const [servicesRes, personasRes, policiesRes, contactInfoRes, responseTemplatesRes, serviceSummariesRes, emotionTemplatesRes, intentNBAMappingRes, faqDetailedRes, intentConfigRes, entityPatternsRes, stateTransitionsConfigRes] = await Promise.all([

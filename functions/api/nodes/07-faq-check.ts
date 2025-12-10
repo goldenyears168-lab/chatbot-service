@@ -4,7 +4,7 @@
  */
 
 import { PipelineContext } from '../lib/pipeline.js';
-import { buildResponse, handleFAQIfNeeded } from '../chat.js';
+import { buildResponse, handleFAQIfNeeded } from '../lib/chatHelpers.js';
 
 /**
  * FAQ 檢查節點

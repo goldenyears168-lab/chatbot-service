@@ -1,0 +1,24 @@
+# 依赖
+node_modules/
+package-lock.json
+
+# 环境变量
+.env
+.dev.vars
+
+# Wrangler
+.wrangler/
+wrangler.toml.local
+
+# 日志
+*.log
+
+# 系统文件
+.DS_Store
+
+# 备份
+goldenyears-backup/
+
+# 临时文件
+tmp/
+*.tmp

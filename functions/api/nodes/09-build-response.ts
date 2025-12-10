@@ -7,7 +7,7 @@
  */
 
 import { PipelineContext } from '../lib/pipeline.js';
-import { buildResponse } from '../chat.js';
+import { buildResponse } from '../lib/chatHelpers.js';
 
 /**
  * 響應構建節點

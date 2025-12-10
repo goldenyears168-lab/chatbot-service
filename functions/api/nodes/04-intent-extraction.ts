@@ -4,7 +4,7 @@
  */
 
 import { PipelineContext } from '../lib/pipeline.js';
-import { classifyIntent, extractEntities } from '../chat.js';
+import { classifyIntent, extractEntities } from '../lib/chatHelpers.js';
 
 /**
  * 意圖提取節點
