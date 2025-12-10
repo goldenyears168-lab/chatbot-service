@@ -28,7 +28,8 @@ export async function onRequestGet(context: { env: any }): Promise<Response> {
 
         // 测试 3: 模型获取
         try {
-          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          // 使用可用的模型（從 ListModels 測得目前可用的是 gemini-2.0-flash）
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
           tests.gemini.modelLoaded = true;
 
           // 测试 4: 简单的 API 调用
