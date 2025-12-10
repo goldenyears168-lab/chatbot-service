@@ -211,10 +211,11 @@
 
       let html = '<div class="gy-chatbot-faq-menu">';
       this.state.faqMenu.forEach(category => {
-        const isExpanded = this.state.expandedCategory === category.id;
+        const categoryId = category.category || category.id;  // 容錯：支援 category 或 id
+        const isExpanded = this.state.expandedCategory === categoryId;
         html += `
           <div class="gy-chatbot-faq-category ${isExpanded ? 'expanded' : ''}">
-            <button class="gy-chatbot-faq-category-header" data-category-id="${category.id}">
+            <button class="gy-chatbot-faq-category-header" data-category-id="${categoryId}">
               <span class="gy-chatbot-faq-category-title">${category.title}</span>
               <span class="gy-chatbot-faq-category-icon">${isExpanded ? '▼' : '▶'}</span>
             </button>
