@@ -1,0 +1,20 @@
+# Cloudflare Pages Functions 配置
+# 多租户 Chatbot 微服务
+
+name = "chatbot-service-multi-tenant"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 生产环境配置
+[env.production]
+name = "chatbot-service-prod"
+# 生产环境环境变量在 Cloudflare Dashboard 中设定：
+# - GEMINI_API_KEY (必需)
+
+# Preview 环境配置
+[env.preview]
+name = "chatbot-service-preview"
+# Preview 环境环境变量在 Cloudflare Dashboard 中设定
+
+# Pages 设置
+pages_build_output_dir = "."

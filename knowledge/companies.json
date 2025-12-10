@@ -1,0 +1,20 @@
+{
+  "goldenyears": {
+    "id": "goldenyears",
+    "name": "好時有影",
+    "name_en": "Golden Years Photo",
+    "allowedOrigins": [
+      "https://www.goldenyearsphoto.com",
+      "https://goldenyearsphoto.com",
+      "http://localhost:8080"
+    ],
+    "widgetConfig": {
+      "theme": "light",
+      "locale": "zh-TW"
+    },
+    "apiConfig": {
+      "useSharedApiKey": true,
+      "apiKeyEnv": "GEMINI_API_KEY"
+    }
+  }
+}
