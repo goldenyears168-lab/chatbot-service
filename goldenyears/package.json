@@ -1,0 +1,31 @@
+{
+  "name": "goldenyears-chatbot-service",
+  "version": "1.0.0",
+  "description": "獨立 Chatbot 微服務 - 可嵌入任何網站",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "sass widget/src/widget.scss widget/widget.css --style=compressed",
+    "dev": "wrangler pages dev .",
+    "deploy": "wrangler pages deploy . --project-name=goldenyears-chatbot-service",
+    "deploy:preview": "wrangler pages deploy . --project-name=goldenyears-chatbot-service --branch=preview",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "predeploy": "npm run build:css"
+  },
+  "keywords": [
+    "chatbot",
+    "ai",
+    "microservice",
+    "widget"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sass": "^1.94.0",
+    "wrangler": "^4.51.0"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  }
+}
+

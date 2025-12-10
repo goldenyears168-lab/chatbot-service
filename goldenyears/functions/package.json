@@ -1,0 +1,10 @@
+{
+  "name": "goldenyears-chatbot-functions",
+  "version": "1.0.0",
+  "description": "Cloudflare Pages Functions for Golden Years Chatbot API",
+  "type": "module",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  }
+}
+
