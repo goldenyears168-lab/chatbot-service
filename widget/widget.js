@@ -182,7 +182,8 @@
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        this.state.faqMenu = data.categories || [];
+        // 後端目前直接回傳陣列，因此同時容錯陣列與物件格式
+        this.state.faqMenu = Array.isArray(data) ? data : (data.categories || []);
         console.log('[GYChatbot] FAQ menu loaded:', this.state.faqMenu.length, 'categories');
         return this.state.faqMenu;
       } catch (error) {

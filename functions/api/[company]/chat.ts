@@ -130,17 +130,16 @@ export async function onRequestPost(context: {
 
     // 8. 执行 Pipeline
     console.log(`[Chat-${companyId}] Starting pipeline execution`);
-    const pipeline = new Pipeline([
-      node_validateRequest,
-      node_initializeServices,
-      node_contextManagement,
-      node_intentExtraction,
-      node_stateTransition,
-      node_specialIntents,
-      node_faqCheck,
-      node_llmGeneration,
-      node_buildResponse,
-    ]);
+    const pipeline = new Pipeline();
+    pipeline.addNode('validateRequest', node_validateRequest);
+    pipeline.addNode('initializeServices', node_initializeServices);
+    pipeline.addNode('contextManagement', node_contextManagement);
+    pipeline.addNode('intentExtraction', node_intentExtraction);
+    pipeline.addNode('stateTransition', node_stateTransition);
+    pipeline.addNode('specialIntents', node_specialIntents);
+    pipeline.addNode('faqCheck', node_faqCheck);
+    pipeline.addNode('llmGeneration', node_llmGeneration);
+    pipeline.addNode('buildResponse', node_buildResponse);
 
     const response = await pipeline.execute(pipelineContext);
 
