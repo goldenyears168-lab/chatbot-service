@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[公司名稱] - Chatbot 測試頁面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section h2 {
+            color: #374151;
+            margin-bottom: 20px;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info-box h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #1e3a8a;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>[公司名稱] Chatbot 測試</h1>
+            <p class="subtitle">AI 智能客服測試平台</p>
+            <span class="status-badge">✓ Chatbot 已啟用</span>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 測試 Chatbot Widget</h2>
+            
+            <div class="info-box">
+                <h3>如何測試</h3>
+                <p>
+                    點擊右下角的聊天按鈕即可開啟 AI 客服對話窗。
+                    這是一個獨立的測試環境，用於驗證 Chatbot 功能。
+                </p>
+            </div>
+            
+            <div class="test-controls">
+                <button class="btn btn-primary" onclick="openChatbot()">開啟 Chatbot</button>
+            </div>
+            
+            <div class="info-box" style="margin-top: 30px;">
+                <h3>🔗 嵌入代碼</h3>
+                <p>要在您的網站嵌入此 Chatbot，請使用以下代碼：</p>
+                <pre style="background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 8px; overflow-x: auto; margin-top: 10px;"><code>&lt;script 
+  src="https://chatbot-service-multi-tenant.pages.dev/widget/loader.js" 
+  data-company="[公司ID]"
+  data-api-endpoint="https://chatbot-service-multi-tenant.pages.dev/api/[公司ID]/chat"
+  data-api-base-url="https://chatbot-service-multi-tenant.pages.dev"
+  defer
+&gt;&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 嵌入 Chatbot Widget -->
+    <!-- 請替換 [公司ID] 為實際的公司 ID -->
+    <script 
+        src="https://chatbot-service-multi-tenant.pages.dev/widget/loader.js" 
+        data-company="[公司ID]"
+        data-api-endpoint="https://chatbot-service-multi-tenant.pages.dev/api/[公司ID]/chat"
+        data-api-base-url="https://chatbot-service-multi-tenant.pages.dev"
+        defer
+    ></script>
+    
+    <script>
+        function openChatbot() {
+            setTimeout(() => {
+                if (window.GYChatbot && window.GYChatbot.open) {
+                    window.GYChatbot.open();
+                } else {
+                    alert('Chatbot 正在載入中，請稍候再試...');
+                }
+            }, 500);
+        }
+    </script>
+</body>
+</html>

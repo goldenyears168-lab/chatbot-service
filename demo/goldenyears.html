@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>好時有影 - Chatbot 測試頁面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin: 0;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            color: #374151;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-icon {
+            font-size: 1.3em;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            color: #4b5563;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info-box h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #1e3a8a;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #dc2626;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 40px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-logo">
+                <div class="logo-icon">📸</div>
+                <div>
+                    <h1>好時有影 Golden Years Photo</h1>
+                    <p class="subtitle">AI 智能客服測試平台</p>
+                </div>
+            </div>
+            <span class="status-badge">✓ Chatbot 已啟用</span>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2><span class="card-icon">🎯</span>服務範圍</h2>
+                <ul class="feature-list">
+                    <li>全家福攝影服務</li>
+                    <li>活動紀錄攝影</li>
+                    <li>寶寶寫真攝影</li>
+                    <li>孕婦寫真攝影</li>
+                    <li>個人形象照</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2><span class="card-icon">💡</span>AI 客服功能</h2>
+                <ul class="feature-list">
+                    <li>方案推薦與諮詢</li>
+                    <li>價格與流程說明</li>
+                    <li>檔期查詢與預約</li>
+                    <li>常見問題解答</li>
+                    <li>即時真人轉接</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2><span class="card-icon">📍</span>服務據點</h2>
+                <ul class="feature-list">
+                    <li>台北內湖店</li>
+                    <li>新竹光復店</li>
+                    <li>台中黎明店</li>
+                    <li>高雄明誠店</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 測試 Chatbot Widget</h2>
+            
+            <div class="info-box">
+                <h3>如何測試</h3>
+                <p>
+                    點擊右下角的聊天按鈕即可開啟 AI 客服對話窗。
+                    您可以嘗試詢問方案、價格、預約流程等問題。
+                </p>
+            </div>
+            
+            <div class="test-controls">
+                <button class="btn btn-primary" onclick="openChatbot()">開啟 Chatbot</button>
+                <button class="btn btn-secondary" onclick="testPriceQuery()">測試：詢問價格</button>
+                <button class="btn btn-secondary" onclick="testServiceQuery()">測試：詢問方案</button>
+                <button class="btn btn-secondary" onclick="testBookingQuery()">測試：詢問預約</button>
+            </div>
+            
+            <div class="info-box" style="margin-top: 30px;">
+                <h3>🔗 嵌入代碼</h3>
+                <p>要在您的網站嵌入此 Chatbot，請使用以下代碼：</p>
+                <pre style="background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 8px; overflow-x: auto; margin-top: 10px;"><code>&lt;script 
+  src="https://chatbot-service-multi-tenant.pages.dev/widget/loader.js" 
+  data-company="goldenyears"
+  data-api-endpoint="https://chatbot-service-multi-tenant.pages.dev/api/goldenyears/chat"
+  data-api-base-url="https://chatbot-service-multi-tenant.pages.dev"
+  defer
+&gt;&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Powered by Multi-Tenant Chatbot Service | Company ID: <code>goldenyears</code></p>
+        </div>
+    </div>
+    
+    <!-- 嵌入 Chatbot Widget -->
+    <script 
+        src="https://chatbot-service-multi-tenant.pages.dev/widget/loader.js" 
+        data-company="goldenyears"
+        data-api-endpoint="https://chatbot-service-multi-tenant.pages.dev/api/goldenyears/chat"
+        data-api-base-url="https://chatbot-service-multi-tenant.pages.dev"
+        data-page-type="demo"
+        data-auto-open="false"
+        defer
+    ></script>
+    
+    <script>
+        function openChatbot() {
+            // 等待 Widget 載入
+            setTimeout(() => {
+                if (window.GYChatbot && window.GYChatbot.open) {
+                    window.GYChatbot.open();
+                } else {
+                    alert('Chatbot 正在載入中，請稍候再試...');
+                }
+            }, 500);
+        }
+        
+        function testPriceQuery() {
+            openChatbot();
+            setTimeout(() => {
+                if (window.GYChatbot && window.GYChatbot.sendMessage) {
+                    window.GYChatbot.sendMessage('全家福方案的價格是多少？');
+                }
+            }, 1000);
+        }
+        
+        function testServiceQuery() {
+            openChatbot();
+            setTimeout(() => {
+                if (window.GYChatbot && window.GYChatbot.sendMessage) {
+                    window.GYChatbot.sendMessage('我想了解你們有哪些攝影方案');
+                }
+            }, 1000);
+        }
+        
+        function testBookingQuery() {
+            openChatbot();
+            setTimeout(() => {
+                if (window.GYChatbot && window.GYChatbot.sendMessage) {
+                    window.GYChatbot.sendMessage('如何預約拍攝？');
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
