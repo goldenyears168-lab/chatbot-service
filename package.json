@@ -1,33 +1,53 @@
 {
-  "name": "chatbot-service-multi-tenant",
-  "version": "2.0.0",
-  "description": "多租户 Chatbot 微服务 - 支持多个公司",
+  "name": "chatbot-service",
+  "version": "3.0.0",
+  "description": "Multi-tenant chatbot service with Pipeline v3 architecture",
   "type": "module",
-  "main": "index.js",
   "scripts": {
     "build": "cd functions && npm install",
-    "build:css": "sass widget/src/widget.scss widget/widget.css --style=compressed",
-    "dev": "wrangler pages dev .",
-    "deploy": "wrangler pages deploy . --project-name=chatbot-service-multi-tenant",
-    "deploy:preview": "wrangler pages deploy . --project-name=chatbot-service-multi-tenant --branch=preview",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "predeploy": "npm run build:css"
+    "dev": "wrangler pages dev . --compatibility-date=2024-01-01",
+    "deploy": "wrangler pages deploy . --project-name=chatbot-service-9qg",
+    "deploy:preview": "wrangler pages deploy . --project-name=chatbot-service-9qg --branch=preview",
+    "deploy:production": "wrangler pages deploy . --project-name=chatbot-service-9qg --branch=main",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest functions/api/pipeline-v3/test/integration",
+    "test:e2e": "jest tests/e2e --runInBand",
+    "test:e2e:preview": "TEST_BASE_URL=https://preview.chatbot-service-9qg.pages.dev npm run test:e2e",
+    "test:e2e:prod": "TEST_BASE_URL=https://chatbot-service-9qg.pages.dev npm run test:e2e",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .ts,.js",
+    "type-check": "tsc --noEmit",
+    "d1:init": "wrangler d1 execute chatbot-service-db --file=./sql/init.sql",
+    "d1:init:local": "wrangler d1 execute chatbot-service-db --local --file=./sql/init.sql"
   },
   "keywords": [
     "chatbot",
     "ai",
-    "microservice",
-    "widget",
+    "cloudflare",
     "multi-tenant",
-    "saas"
+    "pipeline"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Golden Years Photo",
+  "license": "MIT",
   "devDependencies": {
-    "sass": "^1.94.0",
-    "wrangler": "^4.51.0"
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.95.0"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0"
+    "@google/generative-ai": "^0.1.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

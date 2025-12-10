@@ -1,23 +1,31 @@
-name = "chatbot-service"
+# Cloudflare Pages 配置
+# 多租户 Chatbot 微服务
+
 compatibility_date = "2024-01-01"
 
-# Pages 配置
+# Pages 构建输出目录
 pages_build_output_dir = "."
 
-# D1 数据库绑定
+# D1 数据库绑定（用于会话和分析）
 [[d1_databases]]
 binding = "DB"
 database_name = "chatbot-service-db"
-database_id = "preview_database_id"  # 本地开发使用，生产环境需替换
+database_id = "preview_database_id"
 
-# 环境变量（示例）
-[vars]
-ENVIRONMENT = "development"
+# Preview 环境配置
+[env.preview]
+vars = { ENVIRONMENT = "preview" }
 
-# 生产环境配置
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "chatbot-service-db"
+database_id = "preview_database_id"
+
+# Production 环境配置
 [env.production]
 vars = { ENVIRONMENT = "production" }
 
-# Staging 环境配置
-[env.staging]
-vars = { ENVIRONMENT = "staging" }
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "chatbot-service-db-prod"
+database_id = "production_database_id"
