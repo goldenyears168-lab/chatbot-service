@@ -9,7 +9,7 @@ interface ChatRequestBody {
   message: string;
   source?: 'menu' | 'input';
   mode?: 'auto' | 'decision_recommendation' | 'faq_flow_price';
-  pageType?: 'home' | 'qa';
+  pageType?: 'home' | 'qa' | 'demo' | 'embed';
   conversationId?: string;
   context?: {
     last_intent?: string;
@@ -206,8 +206,8 @@ export async function node_validateRequest(ctx: PipelineContext): Promise<Pipeli
     );
   }
 
-  // 10. 驗證 pageType 值
-  if (body.pageType && !['home', 'qa'].includes(body.pageType)) {
+  // 10. 驗證 pageType 值（容忍 demo/embed）
+  if (body.pageType && !['home', 'qa', 'demo', 'embed'].includes(body.pageType)) {
     return new Response(
       JSON.stringify({ 
         error: 'Invalid request', 
@@ -223,8 +223,13 @@ export async function node_validateRequest(ctx: PipelineContext): Promise<Pipeli
     );
   }
 
-  // 驗證通過，將 body 存入 context
-  ctx.body = body;
+  // 驗證通過，將 body 存入 context（並填入預設值）
+  ctx.body = {
+    mode: body.mode ?? 'auto',
+    source: body.source ?? 'input',
+    pageType: body.pageType ?? 'demo',
+    ...body,
+  };
   return ctx;
 }
 
