@@ -6,7 +6,9 @@
     "allowedOrigins": [
       "https://www.goldenyearsphoto.com",
       "https://goldenyearsphoto.com",
-      "http://localhost:8080"
+      "https://chatbot-service-multi-tenant.pages.dev",
+      "http://localhost:8080",
+      "http://localhost:8788"
     ],
     "widgetConfig": {
       "theme": "light",
