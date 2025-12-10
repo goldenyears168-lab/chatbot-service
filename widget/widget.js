@@ -163,10 +163,18 @@
     async loadFAQMenu() {
       try {
         const apiBaseUrl = this.getApiBaseUrl();
-        // 構建完整的 FAQ 菜單 API URL
+        const companyId = this.config.companyId;
+        
+        // 檢查 companyId 是否存在
+        if (!companyId) {
+          console.warn('[GYChatbot] Company ID not set, cannot load FAQ menu');
+          return [];
+        }
+        
+        // 構建完整的 FAQ 菜單 API URL（包含 company ID）
         const apiUrl = apiBaseUrl 
-          ? `${apiBaseUrl}/api/faq-menu`
-          : '/api/faq-menu'; // fallback: 相對路徑
+          ? `${apiBaseUrl}/api/${companyId}/faq-menu`
+          : `/api/${companyId}/faq-menu`; // fallback: 相對路徑
         console.log('[GYChatbot] Loading FAQ menu from:', apiUrl);
         
         const response = await fetch(apiUrl);

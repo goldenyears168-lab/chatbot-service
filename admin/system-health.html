@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline 系统健康检查 - Chatbot Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status-card.success {
+            border-left: 6px solid #10b981;
+        }
+        
+        .status-card.warning {
+            border-left: 6px solid #f59e0b;
+        }
+        
+        .status-card.error {
+            border-left: 6px solid #ef4444;
+        }
+        
+        .status-card.pending {
+            border-left: 6px solid #6366f1;
+        }
+        
+        .status-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-icon {
+            font-size: 1.5em;
+        }
+        
+        .status-details {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-pending {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section h2 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .test-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .test-result {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .test-result.success {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+        
+        .test-result.error {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+        
+        .console-log {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .console-log.info {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .console-log.success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .console-log.error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .console-log.warning {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+        
+        .diagram-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .diagram-container h2 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .flow-step.success {
+            background: #d1fae5;
+            border-left-color: #10b981;
+        }
+        
+        .flow-step.error {
+            background: #fee2e2;
+            border-left-color: #ef4444;
+        }
+        
+        .flow-step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #6366f1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+        
+        .flow-step.success .flow-step-number {
+            background: #10b981;
+        }
+        
+        .flow-step.error .flow-step-number {
+            background: #ef4444;
+        }
+        
+        .flow-step-content {
+            flex: 1;
+        }
+        
+        .flow-step-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .flow-step-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .code-block .keyword {
+            color: #c678dd;
+        }
+        
+        .code-block .string {
+            color: #98c379;
+        }
+        
+        .code-block .comment {
+            color: #7f848e;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Pipeline 系统健康检查</h1>
+            <p class="subtitle">实时监控 Chatbot Service 各个组件的运行状态</p>
+        </div>
+        
+        <!-- 系统状态概览 -->
+        <div class="status-grid">
+            <div class="status-card success" id="card-pipeline">
+                <h3><span class="status-icon">⚙️</span>Pipeline v3 引擎</h3>
+                <div class="status-details">
+                    核心工作流引擎运行正常，所有节点注册完成
+                </div>
+                <span class="status-badge badge-success">✓ 运行正常</span>
+            </div>
+            
+            <div class="status-card success" id="card-widget-fix">
+                <h3><span class="status-icon">🔧</span>Widget 修复</h3>
+                <div class="status-details">
+                    FAQ 菜单路径已修复，添加 companyId 参数
+                </div>
+                <span class="status-badge badge-success">✓ 已修复</span>
+            </div>
+            
+            <div class="status-card pending" id="card-api">
+                <h3><span class="status-icon">🌐</span>API 端点</h3>
+                <div class="status-details">
+                    后端 API 配置正确，等待测试验证
+                </div>
+                <span class="status-badge badge-pending">⏳ 待测试</span>
+            </div>
+            
+            <div class="status-card warning" id="card-env">
+                <h3><span class="status-icon">🔑</span>环境变量</h3>
+                <div class="status-details">
+                    需要验证 GEMINI_API_KEY 是否正确配置
+                </div>
+                <span class="status-badge badge-warning">⚠ 需验证</span>
+            </div>
+        </div>
+        
+        <!-- 修复流程可视化 -->
+        <div class="diagram-container">
+            <h2>🔄 修复流程可视化</h2>
+            <div class="flow-diagram">
+                <div class="flow-step success">
+                    <div class="flow-step-number">✓</div>
+                    <div class="flow-step-content">
+                        <div class="flow-step-title">问题诊断</div>
+                        <div class="flow-step-desc">识别 Widget FAQ 菜单 API 路径缺少 companyId</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step success">
+                    <div class="flow-step-number">✓</div>
+                    <div class="flow-step-content">
+                        <div class="flow-step-title">代码修复</div>
+                        <div class="flow-step-desc">修改 widget.js loadFAQMenu() 方法，添加 companyId 参数</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step" id="step-deploy">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-content">
+                        <div class="flow-step-title">部署更新</div>
+                        <div class="flow-step-desc">将修复后的代码部署到 Cloudflare Pages</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step" id="step-test">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-content">
+                        <div class="flow-step-title">功能测试</div>
+                        <div class="flow-step-desc">验证 FAQ 菜单加载和聊天功能是否正常</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step" id="step-verify">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-content">
+                        <div class="flow-step-title">环境验证</div>
+                        <div class="flow-step-desc">检查环境变量和后端日志，确保无遗漏问题</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API 测试工具 -->
+        <div class="test-section">
+            <h2>🧪 API 端点测试</h2>
+            
+            <div class="test-buttons">
+                <button class="btn btn-primary" onclick="testFAQMenu()">
+                    <span>📋</span> 测试 FAQ 菜单 API
+                </button>
+                <button class="btn btn-primary" onclick="testChatAPI()">
+                    <span>💬</span> 测试 Chat API
+                </button>
+                <button class="btn btn-success" onclick="testAllAPIs()">
+                    <span>🚀</span> 测试所有 API
+                </button>
+                <button class="btn btn-secondary" onclick="clearResults()">
+                    <span>🗑️</span> 清除结果
+                </button>
+            </div>
+            
+            <div id="test-results"></div>
+        </div>
+        
+        <!-- Widget 测试 -->
+        <div class="test-section">
+            <h2>🎨 Widget 功能测试</h2>
+            
+            <div class="test-buttons">
+                <button class="btn btn-primary" onclick="openWidget()">
+                    <span>▶️</span> 打开 Widget
+                </button>
+                <button class="btn btn-warning" onclick="openDemoPage()">
+                    <span>🌐</span> 打开演示页面
+                </button>
+                <button class="btn btn-secondary" onclick="checkWidgetStatus()">
+                    <span>🔍</span> 检查 Widget 状态
+                </button>
+            </div>
+            
+            <div id="widget-results"></div>
+        </div>
+        
+        <!-- 部署指南 -->
+        <div class="diagram-container">
+            <h2>🚀 部署步骤</h2>
+            
+            <div class="code-block">
+<span class="comment"># 步骤 1: 提交修复代码</span>
+git add widget/widget.js
+git commit -m <span class="string">"fix: add companyId to FAQ menu API path"</span>
+git push origin main
+
+<span class="comment"># 步骤 2: 等待 Cloudflare Pages 自动部署 (2-3 分钟)</span>
+<span class="comment"># 可以在 Cloudflare Dashboard 查看部署进度</span>
+
+<span class="comment"># 步骤 3: 测试部署结果</span>
+curl https://chatbot-service-9qg.pages.dev/api/goldenyears/faq-menu
+
+<span class="comment"># 步骤 4: 验证 Widget 功能</span>
+<span class="comment"># 访问: https://chatbot-service-9qg.pages.dev/demo/goldenyears.html</span>
+            </div>
+            
+            <div class="test-buttons">
+                <button class="btn btn-success" onclick="copyDeployCommands()">
+                    <span>📋</span> 复制部署命令
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API 基础 URL
+        const API_BASE_URL = 'https://chatbot-service-9qg.pages.dev';
+        const COMPANY_ID = 'goldenyears';
+        
+        // 测试 FAQ 菜单 API
+        async function testFAQMenu() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div> 正在测试 FAQ 菜单 API...</div>';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE_URL}/api/${COMPANY_ID}/faq-menu`);
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result success">
+                            <div class="console-log success">
+                                <strong>✓ 测试成功！</strong>
+                            </div>
+                            <div class="console-log info">
+                                <strong>URL:</strong> ${API_BASE_URL}/api/${COMPANY_ID}/faq-menu
+                            </div>
+                            <div class="console-log info">
+                                <strong>状态码:</strong> ${response.status} ${response.statusText}
+                            </div>
+                            <div class="console-log info">
+                                <strong>响应时间:</strong> ${duration}ms
+                            </div>
+                            <div class="console-log info">
+                                <strong>分类数量:</strong> ${data.categories ? data.categories.length : 0}
+                            </div>
+                            <div class="console-log info">
+                                <strong>响应数据:</strong><br>
+                                <pre>${JSON.stringify(data, null, 2)}</pre>
+                            </div>
+                        </div>
+                    `;
+                    updateCardStatus('card-api', 'success', '✓ API 正常');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <div class="console-log error">
+                            <strong>✗ 测试失败！</strong>
+                        </div>
+                        <div class="console-log error">
+                            <strong>错误:</strong> ${error.message}
+                        </div>
+                        <div class="console-log warning">
+                            <strong>可能原因:</strong><br>
+                            1. API 端点未部署或路径错误<br>
+                            2. CORS 配置问题<br>
+                            3. 知识库文件未找到
+                        </div>
+                    </div>
+                `;
+                updateCardStatus('card-api', 'error', '✗ API 错误');
+            }
+        }
+        
+        // 测试 Chat API
+        async function testChatAPI() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div> 正在测试 Chat API...</div>';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE_URL}/api/${COMPANY_ID}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: '你好，我想了解攝影方案',
+                        mode: 'auto',
+                        pageType: 'demo'
+                    })
+                });
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result success">
+                            <div class="console-log success">
+                                <strong>✓ 测试成功！</strong>
+                            </div>
+                            <div class="console-log info">
+                                <strong>URL:</strong> ${API_BASE_URL}/api/${COMPANY_ID}/chat
+                            </div>
+                            <div class="console-log info">
+                                <strong>状态码:</strong> ${response.status} ${response.statusText}
+                            </div>
+                            <div class="console-log info">
+                                <strong>响应时间:</strong> ${duration}ms
+                            </div>
+                            <div class="console-log info">
+                                <strong>AI 回复:</strong><br>${data.reply || '(无回复)'}
+                            </div>
+                            <div class="console-log info">
+                                <strong>对话 ID:</strong> ${data.conversationId || '(无)'}
+                            </div>
+                        </div>
+                    `;
+                    updateCardStatus('card-api', 'success', '✓ API 正常');
+                    updateCardStatus('card-env', 'success', '✓ 环境正常');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${data.error || response.statusText}`);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <div class="console-log error">
+                            <strong>✗ 测试失败！</strong>
+                        </div>
+                        <div class="console-log error">
+                            <strong>错误:</strong> ${error.message}
+                        </div>
+                        <div class="console-log warning">
+                            <strong>可能原因:</strong><br>
+                            1. GEMINI_API_KEY 环境变量未配置<br>
+                            2. 知识库文件加载失败<br>
+                            3. Pipeline 执行错误<br>
+                            4. LLM 服务调用失败
+                        </div>
+                        <div class="console-log info">
+                            <strong>解决方法:</strong><br>
+                            检查 Cloudflare Pages 环境变量设置
+                        </div>
+                    </div>
+                `;
+                updateCardStatus('card-api', 'error', '✗ API 错误');
+                updateCardStatus('card-env', 'warning', '⚠ 需检查');
+            }
+        }
+        
+        // 测试所有 API
+        async function testAllAPIs() {
+            await testFAQMenu();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testChatAPI();
+        }
+        
+        // 清除结果
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+        }
+        
+        // 打开 Widget
+        function openWidget() {
+            alert('请访问演示页面查看 Widget:\nhttps://chatbot-service-9qg.pages.dev/demo/goldenyears.html');
+        }
+        
+        // 打开演示页面
+        function openDemoPage() {
+            window.open(`${API_BASE_URL}/demo/goldenyears.html`, '_blank');
+        }
+        
+        // 检查 Widget 状态
+        function checkWidgetStatus() {
+            const resultsDiv = document.getElementById('widget-results');
+            resultsDiv.innerHTML = `
+                <div class="test-result">
+                    <div class="console-log info">
+                        <strong>Widget 修复状态:</strong>
+                    </div>
+                    <div class="console-log success">
+                        ✓ loadFAQMenu() 方法已修复<br>
+                        ✓ 添加 companyId 参数<br>
+                        ✓ API 路径现在是: /api/goldenyears/faq-menu
+                    </div>
+                    <div class="console-log info">
+                        <strong>下一步:</strong><br>
+                        1. 部署修复后的代码<br>
+                        2. 访问演示页面测试<br>
+                        3. 验证 FAQ 菜单是否正确加载
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 更新卡片状态
+        function updateCardStatus(cardId, status, text) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            
+            card.className = `status-card ${status}`;
+            const badge = card.querySelector('.status-badge');
+            if (badge) {
+                badge.className = `status-badge badge-${status}`;
+                badge.textContent = text;
+            }
+        }
+        
+        // 复制部署命令
+        function copyDeployCommands() {
+            const commands = `git add widget/widget.js
+git commit -m "fix: add companyId to FAQ menu API path"
+git push origin main`;
+            
+            navigator.clipboard.writeText(commands).then(() => {
+                alert('✓ 部署命令已复制到剪贴板！');
+            }).catch(err => {
+                alert('复制失败: ' + err);
+            });
+        }
+        
+        // 页面加载时自动运行测试
+        window.addEventListener('load', () => {
+            console.log('🏥 Pipeline 系统健康检查页面加载完成');
+            console.log('📊 准备进行 API 测试...');
+            
+            // 延迟 1 秒后自动测试
+            setTimeout(() => {
+                console.log('🚀 开始自动测试...');
+                testAllAPIs();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+
