@@ -23,41 +23,50 @@ interface ChatRequestBody {
 
 /**
  * 構建 CORS headers
- * 支援從環境變數動態讀取允許的來源域名
+ * 使用公司配置的 allowedOrigins
  */
-function buildCorsHeaders(request: Request, env?: any): Record<string, string> {
-  // 從環境變數讀取允許的域名（用逗號分隔）
-  const allowedDomains = env?.CHATBOT_ALLOWED_ORIGINS || '';
-  
-  const defaults = [
-    'https://www.goldenyearsphoto.com',
-    'https://goldenyearsphoto.com',
-    'https://goldenyearsphoto.pages.dev',
-    // 開發環境
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'http://localhost:8081',
-    'http://127.0.0.1:8081',
-  ];
-  
-  // 合併預設和配置的域名
-  const configured = allowedDomains
-    .split(',')
-    .map(d => d.trim())
-    .filter(Boolean);
-  
-  const allowedOrigins = [...defaults, ...configured];
-  
+function buildCorsHeaders(request: Request, companyConfig?: any): Record<string, string> {
   const origin = request.headers.get('Origin');
-  const allowedOrigin = origin && allowedOrigins.includes(origin) 
-    ? origin 
-    : null; // 如果不在白名單，返回 null（可選擇拒絕或使用預設值）
+  
+  // 如果沒有提供公司配置，使用 fallback
+  if (!companyConfig || !companyConfig.allowedOrigins) {
+    console.warn('[ValidateNode] No company config provided for CORS, using fallback');
+    return {
+      'Access-Control-Allow-Origin': origin || '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
+    };
+  }
+  
+  // 使用公司配置的 allowedOrigins
+  const allowedOrigins = companyConfig.allowedOrigins;
+  
+  // 檢查 origin 是否在允許列表中
+  let allowedOrigin = null;
+  if (origin) {
+    // 直接匹配
+    if (allowedOrigins.includes(origin)) {
+      allowedOrigin = origin;
+    }
+    // 支持通配符匹配（例如 *.pages.dev）
+    else if (origin.includes('.pages.dev') && 
+             (allowedOrigins.includes('*.pages.dev') || 
+              allowedOrigins.includes('https://*.pages.dev'))) {
+      allowedOrigin = origin;
+    }
+  }
+  
+  // 如果 origin 不在白名單，使用第一個允許的 origin 作為 fallback
+  if (!allowedOrigin) {
+    allowedOrigin = allowedOrigins[0];
+  }
   
   return {
-    'Access-Control-Allow-Origin': allowedOrigin || allowedOrigins[0], // 使用第一個預設值作為 fallback
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400', // 24 hours
+    'Access-Control-Max-Age': '86400',
   };
 }
 
@@ -65,9 +74,9 @@ function buildCorsHeaders(request: Request, env?: any): Record<string, string> {
  * 請求驗證節點
  */
 export async function node_validateRequest(ctx: PipelineContext): Promise<PipelineContext | Response> {
-  // 1. 構建 CORS headers（必須在處理 OPTIONS 之前）
+  // 1. 構建 CORS headers（使用公司配置）
   if (!ctx.corsHeaders || Object.keys(ctx.corsHeaders).length === 0) {
-    ctx.corsHeaders = buildCorsHeaders(ctx.request, ctx.env);
+    ctx.corsHeaders = buildCorsHeaders(ctx.request, ctx.companyConfig);
   }
 
   // 2. 處理 OPTIONS 請求

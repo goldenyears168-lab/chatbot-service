@@ -113,10 +113,12 @@ export async function onRequestPost(context: {
       request,
       env,
       companyId,
+      companyConfig, // 傳遞公司配置給 Pipeline
       knowledgeBase,
       llmService,
       contextManager,
       body: null,
+      corsHeaders: {}, // 初始化為空，由 validate node 填充
       intent: '',
       entities: {},
       conversationContext: null,
@@ -144,23 +146,12 @@ export async function onRequestPost(context: {
 
     const response = await pipeline.execute(pipelineContext);
 
-    // 9. 添加 CORS 头
-    const allowedOrigin = getAllowedOrigin(companyConfig, origin);
-    const responseWithCors = new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: {
-        ...Object.fromEntries(response.headers.entries()),
-        'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-    });
-
+    // 9. Pipeline 已經處理 CORS 標頭，直接返回
+    // ⚠️ 注意：不要在這裡再添加 CORS 標頭，會導致重複！
     const responseTime = Date.now() - startTime;
     console.log(`[Chat-${companyId}] Request completed in ${responseTime}ms`);
 
-    return responseWithCors;
+    return response;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;

@@ -13,6 +13,8 @@ export interface PipelineContext {
   request: Request;
   env: any;
   body?: any; // ChatRequestBody，在驗證節點後填充
+  companyId?: string; // 公司 ID
+  companyConfig?: any; // 公司配置（用於 CORS 等）
   
   // 中間處理數據
   corsHeaders: Record<string, string>;
