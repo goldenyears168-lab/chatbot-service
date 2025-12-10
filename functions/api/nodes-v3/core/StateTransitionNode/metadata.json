@@ -1,0 +1,60 @@
+{
+  "id": "state-transition",
+  "name": "State Transition",
+  "version": "1.0.0",
+  "category": "core",
+  "description": "决定下一个对话状态（使用配置驱动）",
+  "icon": "🔄",
+  "color": "#00BCD4",
+  
+  "inputs": [
+    {
+      "name": "knowledgeBase",
+      "type": "KnowledgeBase",
+      "required": true,
+      "description": "知识库实例"
+    },
+    {
+      "name": "contextManager",
+      "type": "ContextManager",
+      "required": true,
+      "description": "上下文管理器实例"
+    },
+    {
+      "name": "conversationContext",
+      "type": "ConversationContext",
+      "required": true,
+      "description": "对话上下文"
+    },
+    {
+      "name": "intent",
+      "type": "string",
+      "required": true,
+      "description": "用户意图"
+    },
+    {
+      "name": "mergedEntities",
+      "type": "object",
+      "required": true,
+      "description": "合并的实体"
+    }
+  ],
+  
+  "outputs": [
+    {
+      "name": "success",
+      "type": "object",
+      "description": "状态转换结果"
+    },
+    {
+      "name": "error",
+      "type": "Error",
+      "description": "状态转换失败"
+    }
+  ],
+  
+  "config": {
+    "useConfigTransitions": true,
+    "fallbackToCurrent": true
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "id": "special-intents",
+  "name": "Special Intent Handler",
+  "version": "1.0.0",
+  "category": "core",
+  "description": "处理特殊意图（Line 询问、投诉、转真人等），如果匹配则直接返回响应",
+  "icon": "⚡",
+  "color": "#F44336",
+  
+  "inputs": [
+    {
+      "name": "message",
+      "type": "string",
+      "required": true,
+      "description": "用户消息"
+    },
+    {
+      "name": "intent",
+      "type": "string",
+      "required": true,
+      "description": "用户意图"
+    },
+    {
+      "name": "conversationContext",
+      "type": "ConversationContext",
+      "required": true,
+      "description": "对话上下文"
+    },
+    {
+      "name": "mergedEntities",
+      "type": "object",
+      "required": true,
+      "description": "合并的实体"
+    },
+    {
+      "name": "contextManager",
+      "type": "ContextManager",
+      "required": true,
+      "description": "上下文管理器"
+    },
+    {
+      "name": "knowledgeBase",
+      "type": "KnowledgeBase",
+      "required": true,
+      "description": "知识库"
+    },
+    {
+      "name": "corsHeaders",
+      "type": "object",
+      "required": true,
+      "description": "CORS headers"
+    },
+    {
+      "name": "nextState",
+      "type": "string",
+      "required": true,
+      "description": "下一个状态"
+    }
+  ],
+  
+  "outputs": [
+    {
+      "name": "continue",
+      "type": "object",
+      "description": "继续正常流程"
+    },
+    {
+      "name": "response",
+      "type": "Response",
+      "description": "直接返回 HTTP 响应"
+    }
+  ],
+  
+  "config": {
+    "checkLineInquiry": true,
+    "handleComplaint": true,
+    "handleHandoff": true,
+    "specialIntents": ["complaint", "handoff_to_human"]
+  }
+}

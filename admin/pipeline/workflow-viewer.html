@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipeline v3 - 工作流查看器</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .app-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .app-header {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .app-header h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .app-header p {
+      color: #666;
+      font-size: 16px;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+
+    .sidebar {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .workflow-list {
+      list-style: none;
+    }
+
+    .workflow-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .workflow-item:hover {
+      background: #f5f5f5;
+    }
+
+    .workflow-item.active {
+      background: #667eea;
+      color: white;
+      border-color: #5568d3;
+    }
+
+    .workflow-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .workflow-meta {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .viewer-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .viewer-header {
+      background: #fafafa;
+      padding: 20px 30px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .viewer-title h3 {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .viewer-title p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .viewer-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+      background: #f0f0ff;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 20px 30px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #667eea;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .diagram-area {
+      padding: 40px;
+      overflow-x: auto;
+      min-height: 500px;
+    }
+
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #999;
+    }
+
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px;
+      color: #856404;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 40px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #666;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 30px;
+      background: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .tab {
+      padding: 15px 25px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      font-weight: 500;
+      color: #666;
+    }
+
+    .tab:hover {
+      color: #667eea;
+    }
+
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 30px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .info-item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .info-value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    pre {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <div class="app-header">
+      <h1>
+        <span>🎨</span>
+        Pipeline v3 工作流查看器
+      </h1>
+      <p>可视化管理和查看工作流程图</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <h2>📋 工作流列表</h2>
+        <ul class="workflow-list" id="workflowList">
+          <li class="workflow-item active" data-workflow="chatbot-main">
+            <div class="workflow-name">Chatbot Main Workflow</div>
+            <div class="workflow-meta">v1.0.0 • 9 节点</div>
+          </li>
+          <li class="workflow-item" data-workflow="test-simple">
+            <div class="workflow-name">Test Simple Workflow</div>
+            <div class="workflow-meta">v1.0.0 • 3 节点</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Viewer -->
+      <div class="viewer-container">
+        <div class="viewer-header">
+          <div class="viewer-title">
+            <h3 id="workflowName">Chatbot Main Workflow</h3>
+            <p id="workflowDescription">完整的聊天机器人工作流</p>
+          </div>
+          <div class="viewer-controls">
+            <button class="btn btn-secondary" onclick="exportSVG()">导出 SVG</button>
+            <button class="btn btn-secondary" onclick="exportPNG()">导出 PNG</button>
+            <button class="btn btn-primary" onclick="refreshDiagram()">刷新</button>
+          </div>
+        </div>
+
+        <div class="stats-bar" id="statsBar">
+          <div class="stat-item">
+            <span class="stat-value" id="statNodes">9</span>
+            <span class="stat-label">节点数</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="statConnections">12</span>
+            <span class="stat-label">连接数</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="statComplexity">32</span>
+            <span class="stat-label">复杂度</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="statVersion">1.0.0</span>
+            <span class="stat-label">版本</span>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" data-tab="diagram" onclick="switchTab('diagram')">流程图</div>
+          <div class="tab" data-tab="info" onclick="switchTab('info')">详细信息</div>
+          <div class="tab" data-tab="json" onclick="switchTab('json')">JSON 数据</div>
+        </div>
+
+        <div class="tab-content active" id="tab-diagram">
+          <div class="diagram-area" id="diagramArea">
+            <div class="loading">
+              <div class="loading-spinner"></div>
+              <p>加载流程图中...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-info">
+          <div class="info-grid" id="infoGrid">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-json">
+          <pre><code id="jsonContent">// Loading...</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+
+    // Current workflow data
+    let currentWorkflow = null;
+
+    // Load workflow data
+    async function loadWorkflow(workflowId) {
+      try {
+        const response = await fetch(`../../functions/api/workflows-v3/${workflowId}.json`);
+        if (!response.ok) throw new Error('Failed to load workflow');
+        
+        const workflow = await response.json();
+        currentWorkflow = workflow;
+        
+        renderWorkflow(workflow);
+      } catch (error) {
+        console.error('Error loading workflow:', error);
+        document.getElementById('diagramArea').innerHTML = `
+          <div class="error">
+            <strong>加载失败</strong><br>
+            无法加载工作流: ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    // Render workflow
+    function renderWorkflow(workflow) {
+      // Update header
+      document.getElementById('workflowName').textContent = workflow.name;
+      document.getElementById('workflowDescription').textContent = workflow.description || '';
+
+      // Update stats
+      const stats = calculateStats(workflow);
+      document.getElementById('statNodes').textContent = stats.totalNodes;
+      document.getElementById('statConnections').textContent = stats.totalConnections;
+      document.getElementById('statComplexity').textContent = stats.complexity;
+      document.getElementById('statVersion').textContent = workflow.version;
+
+      // Render diagram
+      renderDiagram(workflow);
+
+      // Render info
+      renderInfo(workflow);
+
+      // Render JSON
+      document.getElementById('jsonContent').textContent = JSON.stringify(workflow, null, 2);
+    }
+
+    // Render Mermaid diagram
+    function renderDiagram(workflow) {
+      const mermaidCode = generateMermaid(workflow);
+      const diagramArea = document.getElementById('diagramArea');
+      
+      diagramArea.innerHTML = `<div class="mermaid">${mermaidCode}</div>`;
+      
+      mermaid.run({
+        querySelector: '.mermaid'
+      }).catch(err => {
+        console.error('Mermaid rendering error:', err);
+        diagramArea.innerHTML = `
+          <div class="error">
+            <strong>渲染失败</strong><br>
+            无法渲染流程图: ${err.message}
+          </div>
+        `;
+      });
+    }
+
+    // Generate Mermaid code
+    function generateMermaid(workflow) {
+      const lines = ['graph TD'];
+      
+      // Nodes
+      for (const node of workflow.nodes) {
+        const icon = getNodeIcon(node);
+        const label = `${icon} ${node.name}`;
+        lines.push(`  ${node.id}["${label}"]`);
+      }
+      
+      // Connections
+      for (const conn of workflow.connections) {
+        const label = conn.fromOutput || '';
+        const arrow = conn.fromOutput === 'error' ? '-.->' : '-->';
+        
+        if (label) {
+          lines.push(`  ${conn.from} ${arrow}|"${label}"| ${conn.to}`);
+        } else {
+          lines.push(`  ${conn.from} ${arrow} ${conn.to}`);
+        }
+      }
+      
+      // Styles
+      lines.push('  classDef validation fill:#2196F3,stroke:#1976D2,stroke-width:2px,color:#fff');
+      lines.push('  classDef processing fill:#FF9800,stroke:#F57C00,stroke-width:2px,color:#fff');
+      lines.push('  classDef decision fill:#9C27B0,stroke:#7B1FA2,stroke-width:2px,color:#fff');
+      lines.push('  classDef output fill:#4CAF50,stroke:#388E3C,stroke-width:2px,color:#fff');
+      
+      // Apply classes
+      for (const node of workflow.nodes) {
+        const className = getNodeClass(node);
+        if (className) {
+          lines.push(`  class ${node.id} ${className}`);
+        }
+      }
+      
+      return lines.join('\n');
+    }
+
+    // Get node icon
+    function getNodeIcon(node) {
+      const iconMap = {
+        'validate-request': '🔍',
+        'initialize-services': '⚙️',
+        'context-management': '💬',
+        'intent-extraction': '🎯',
+        'state-transition': '🔄',
+        'special-intents': '⚡',
+        'faq-check': '❓',
+        'llm-generation': '🤖',
+        'build-response': '📦',
+      };
+      return iconMap[node.type] || '📌';
+    }
+
+    // Get node class
+    function getNodeClass(node) {
+      if (node.type.includes('validate')) return 'validation';
+      if (node.type.includes('check')) return 'decision';
+      if (node.type.includes('response')) return 'output';
+      return 'processing';
+    }
+
+    // Calculate stats
+    function calculateStats(workflow) {
+      const branches = workflow.connections.filter(c => c.fromOutput && c.fromOutput !== 'success').length;
+      return {
+        totalNodes: workflow.nodes.length,
+        totalConnections: workflow.connections.length,
+        complexity: workflow.nodes.length + workflow.connections.length + branches * 2
+      };
+    }
+
+    // Render info
+    function renderInfo(workflow) {
+      const infoGrid = document.getElementById('infoGrid');
+      infoGrid.innerHTML = `
+        <div class="info-item">
+          <div class="info-label">工作流 ID</div>
+          <div class="info-value">${workflow.id}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">名称</div>
+          <div class="info-value">${workflow.name}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">版本</div>
+          <div class="info-value">${workflow.version}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">描述</div>
+          <div class="info-value">${workflow.description || 'N/A'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">超时时间</div>
+          <div class="info-value">${workflow.settings.timeout}ms</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">创建时间</div>
+          <div class="info-value">${workflow.metadata?.created || 'N/A'}</div>
+        </div>
+      `;
+    }
+
+    // Switch tab
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    // Export functions
+    function exportSVG() {
+      const svg = document.querySelector('.mermaid svg');
+      if (!svg) return alert('请先加载流程图');
+      
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      downloadBlob(blob, `${currentWorkflow.id}-flowchart.svg`);
+    }
+
+    function exportPNG() {
+      const svg = document.querySelector('.mermaid svg');
+      if (!svg) return alert('请先加载流程图');
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      
+      img.onload = () => {
+        canvas.width = img.width * 2;
+        canvas.height = img.height * 2;
+        ctx.scale(2, 2);
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob(blob => {
+          downloadBlob(blob, `${currentWorkflow.id}-flowchart.png`);
+        });
+        
+        URL.revokeObjectURL(url);
+      };
+      
+      img.src = url;
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function refreshDiagram() {
+      if (currentWorkflow) {
+        renderDiagram(currentWorkflow);
+      }
+    }
+
+    // Workflow list click
+    document.getElementById('workflowList').addEventListener('click', (e) => {
+      const item = e.target.closest('.workflow-item');
+      if (!item) return;
+      
+      document.querySelectorAll('.workflow-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      
+      const workflowId = item.dataset.workflow;
+      loadWorkflow(workflowId);
+    });
+
+    // Load initial workflow
+    loadWorkflow('chatbot-main-workflow');
+  </script>
+</body>
+</html>

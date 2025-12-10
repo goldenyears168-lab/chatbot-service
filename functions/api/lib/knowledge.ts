@@ -223,8 +223,9 @@ export class KnowledgeBase {
    * 載入所有知識庫資料
    * 使用動態 import 載入 JSON 文件
    * @param baseUrl 可選的基礎 URL，用於構建完整的文件路徑
+   * @param assets 可選的 Cloudflare Pages ASSETS 對象
    */
-  async load(baseUrl?: string): Promise<void> {
+  async load(baseUrl?: string, assets?: any): Promise<void> {
     try {
       // 在 Cloudflare Pages Functions 中，優先使用 fetch 載入 JSON 文件
       // 因為動態 import 在生產環境中可能無法正確解析路徑
@@ -267,106 +268,97 @@ export class KnowledgeBase {
       
       console.log('[Knowledge] Loading knowledge files from:', knowledgeBasePath);
       
-      // 使用 fetch 載入所有 JSON 文件
-      const [servicesRes, personasRes, policiesRes, contactInfoRes, responseTemplatesRes, serviceSummariesRes, emotionTemplatesRes, intentNBAMappingRes, faqDetailedRes, intentConfigRes, entityPatternsRes, stateTransitionsConfigRes] = await Promise.all([
-        fetch(`${knowledgeBasePath}/services.json`).catch(err => {
-          console.error('[Knowledge] Failed to fetch services.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/personas.json`).catch(err => {
-          console.error('[Knowledge] Failed to fetch personas.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/policies.json`).catch(err => {
-          console.error('[Knowledge] Failed to fetch policies.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/contact_info.json`).catch(err => {
-          console.error('[Knowledge] Failed to fetch contact_info.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/response_templates.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch response_templates.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/service_summaries.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch service_summaries.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/emotion_templates.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch emotion_templates.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/intent_nba_mapping.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch intent_nba_mapping.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/faq_detailed.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch faq_detailed.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/intent_config.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch intent_config.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/entity_patterns.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch entity_patterns.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        }),
-        fetch(`${knowledgeBasePath}/state_transitions.json`).catch(err => {
-          console.warn('[Knowledge] Failed to fetch state_transitions.json:', err);
-          return { ok: false, status: 0, statusText: String(err) } as Response;
-        })
+      // 使用 Cloudflare Pages ASSETS 或 fetch
+      const fetchFn = assets ? (url: string) => assets.fetch(url) : fetch;
+      
+      console.log('[Knowledge] Using', assets ? 'ASSETS.fetch' : 'global fetch');
+      console.log('[Knowledge] Loading knowledge files from:', knowledgeBasePath);
+      
+      // 辅助函数：安全地获取文件
+      const safeFetch = async (filename: string, required: boolean = true) => {
+        const url = `${knowledgeBasePath}/${filename}`;
+        try {
+          const response = await fetchFn(url);
+          if (!response.ok) {
+            const msg = `Failed to fetch ${filename}: ${response.status} ${response.statusText}`;
+            if (required) {
+              throw new Error(msg);
+            } else {
+              console.warn(`[Knowledge]`, msg);
+              return null;
+            }
+          }
+          return response;
+        } catch (err) {
+          const msg = `Failed to fetch ${filename}: ${err}`;
+          if (required) {
+            throw new Error(msg);
+          } else {
+            console.warn(`[Knowledge]`, msg);
+            return null;
+          }
+        }
+      };
+      
+      // 批量加载所有文件（使用队列避免连接限制）
+      const [
+        servicesRes,
+        personasRes,
+        policiesRes,
+        contactInfoRes
+      ] = await Promise.all([
+        safeFetch('services.json'),
+        safeFetch('personas.json'),
+        safeFetch('policies.json'),
+        safeFetch('contact_info.json')
+      ]);
+      
+      const [
+        intentConfigRes,
+        entityPatternsRes,
+        stateTransitionsConfigRes,
+        faqDetailedRes
+      ] = await Promise.all([
+        safeFetch('intent_config.json', false),
+        safeFetch('entity_patterns.json', false),
+        safeFetch('state_transitions.json', false),
+        safeFetch('faq_detailed.json', false)
+      ]);
+      
+      const [
+        responseTemplatesRes,
+        serviceSummariesRes,
+        emotionTemplatesRes,
+        intentNBAMappingRes
+      ] = await Promise.all([
+        safeFetch('response_templates.json', false),
+        safeFetch('service_summaries.json', false),
+        safeFetch('emotion_templates.json', false),
+        safeFetch('intent_nba_mapping.json', false)
       ]);
 
-      // 檢查關鍵文件的響應狀態
-      if (!servicesRes.ok) {
-        const errorMsg = `Failed to fetch services.json: ${servicesRes.status} ${servicesRes.statusText}. URL: ${knowledgeBasePath}/services.json`;
-        console.error('[Knowledge]', errorMsg);
-        throw new Error(errorMsg);
-      }
-      if (!personasRes.ok) {
-        const errorMsg = `Failed to fetch personas.json: ${personasRes.status} ${personasRes.statusText}. URL: ${knowledgeBasePath}/personas.json`;
-        console.error('[Knowledge]', errorMsg);
-        throw new Error(errorMsg);
-      }
-      if (!policiesRes.ok) {
-        const errorMsg = `Failed to fetch policies.json: ${policiesRes.status} ${policiesRes.statusText}. URL: ${knowledgeBasePath}/policies.json`;
-        console.error('[Knowledge]', errorMsg);
-        throw new Error(errorMsg);
-      }
-      if (!contactInfoRes.ok) {
-        const errorMsg = `Failed to fetch contact_info.json: ${contactInfoRes.status} ${contactInfoRes.statusText}. URL: ${knowledgeBasePath}/contact_info.json`;
-        console.error('[Knowledge]', errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      // 解析 JSON（可選文件如果失敗，使用空物件）
-      const [servicesData, personasData, policiesData, contactInfoData, responseTemplatesData, serviceSummariesData, emotionTemplatesData, intentNBAMappingData, faqDetailedData, intentConfigData, entityPatternsData, stateTransitionsConfigData] = await Promise.all([
-        servicesRes.json().catch(err => {
-          console.error('[Knowledge] Failed to parse services.json:', err);
-          throw new Error(`Failed to parse services.json: ${err instanceof Error ? err.message : String(err)}`);
-        }),
-        personasRes.json().catch(err => {
-          console.error('[Knowledge] Failed to parse personas.json:', err);
-          throw new Error(`Failed to parse personas.json: ${err instanceof Error ? err.message : String(err)}`);
-        }),
-        policiesRes.json().catch(err => {
-          console.error('[Knowledge] Failed to parse policies.json:', err);
-          throw new Error(`Failed to parse policies.json: ${err instanceof Error ? err.message : String(err)}`);
-        }),
-        contactInfoRes.json().catch(err => {
-          console.error('[Knowledge] Failed to parse contact_info.json:', err);
-          throw new Error(`Failed to parse contact_info.json: ${err instanceof Error ? err.message : String(err)}`);
-        }),
-        responseTemplatesRes.ok ? responseTemplatesRes.json().catch(() => ({ templates: {} })) : Promise.resolve({ templates: {} }),
-        serviceSummariesRes.ok ? serviceSummariesRes.json().catch(() => ({ summaries: {} })) : Promise.resolve({ summaries: {} }),
-        emotionTemplatesRes.ok ? emotionTemplatesRes.json().catch(() => ({ templates: {} })) : Promise.resolve({ templates: {} }),
-        intentNBAMappingRes.ok ? intentNBAMappingRes.json().catch(() => ({ mappings: {} })) : Promise.resolve({ mappings: {} }),
-        faqDetailedRes.ok ? faqDetailedRes.json().catch(() => null) : Promise.resolve(null),
-        intentConfigRes.ok ? intentConfigRes.json().catch(() => null) : Promise.resolve(null),
-        entityPatternsRes.ok ? entityPatternsRes.json().catch(() => null) : Promise.resolve(null),
-        stateTransitionsConfigRes.ok ? stateTransitionsConfigRes.json().catch(() => null) : Promise.resolve(null)
+      // 解析 JSON
+      console.log('[Knowledge] Parsing JSON responses...');
+      
+      const [servicesData, personasData, policiesData, contactInfoData] = await Promise.all([
+        servicesRes!.json(),
+        personasRes!.json(),
+        policiesRes!.json(),
+        contactInfoRes!.json()
+      ]);
+      
+      const [intentConfigData, entityPatternsData, stateTransitionsConfigData, faqDetailedData] = await Promise.all([
+        intentConfigRes ? intentConfigRes.json().catch(() => null) : Promise.resolve(null),
+        entityPatternsRes ? entityPatternsRes.json().catch(() => null) : Promise.resolve(null),
+        stateTransitionsConfigRes ? stateTransitionsConfigRes.json().catch(() => null) : Promise.resolve(null),
+        faqDetailedRes ? faqDetailedRes.json().catch(() => null) : Promise.resolve(null)
+      ]);
+      
+      const [responseTemplatesData, serviceSummariesData, emotionTemplatesData, intentNBAMappingData] = await Promise.all([
+        responseTemplatesRes ? responseTemplatesRes.json().catch(() => ({ templates: {} })) : Promise.resolve({ templates: {} }),
+        serviceSummariesRes ? serviceSummariesRes.json().catch(() => ({ summaries: {} })) : Promise.resolve({ summaries: {} }),
+        emotionTemplatesRes ? emotionTemplatesRes.json().catch(() => ({ templates: {} })) : Promise.resolve({ templates: {} }),
+        intentNBAMappingRes ? intentNBAMappingRes.json().catch(() => ({ mappings: {} })) : Promise.resolve({ mappings: {} })
       ]);
 
       // 載入資料
@@ -774,6 +766,52 @@ export class KnowledgeBase {
       throw new Error('Knowledge base not loaded. Call load() first.');
     }
     return this.stateTransitionsConfig;
+  }
+
+  /**
+   * 获取 FAQ 菜单（用于前端显示）
+   * 返回简化的分类和问题列表
+   */
+  getFAQMenu(): Array<{
+    category: string;
+    title: string;
+    questions: Array<{ id: string; question: string }>;
+  }> {
+    if (!this.loaded) {
+      throw new Error('Knowledge base not loaded. Call load() first.');
+    }
+    
+    if (!this.faqDetailed) {
+      return [];
+    }
+    
+    const menu: Array<{
+      category: string;
+      title: string;
+      questions: Array<{ id: string; question: string }>;
+    }> = [];
+    
+    const categoryMap: Record<string, string> = {
+      booking: '預訂相關',
+      delivery: '取件相關',
+      shooting: '拍攝相關',
+      other: '其他'
+    };
+    
+    for (const [key, categoryData] of Object.entries(this.faqDetailed.categories)) {
+      if (categoryData && categoryData.questions && categoryData.questions.length > 0) {
+        menu.push({
+          category: key,
+          title: categoryData.title || categoryMap[key] || key,
+          questions: categoryData.questions.map((q, index) => ({
+            id: q.id || `${key}-${index}`,
+            question: q.question
+          }))
+        });
+      }
+    }
+    
+    return menu;
   }
 }
 

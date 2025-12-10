@@ -1,0 +1,214 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chatbot-service.example.com/schemas/workflow-v3.json",
+  "title": "Pipeline v3 Workflow Schema",
+  "description": "Schema for Pipeline v3 workflow definitions",
+  "type": "object",
+  "required": ["id", "name", "version", "nodes", "connections"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique workflow identifier",
+      "pattern": "^[a-z0-9-]+$",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable workflow name",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "version": {
+      "type": "string",
+      "description": "Workflow version (semantic versioning)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Workflow description",
+      "maxLength": 1000
+    },
+    "nodes": {
+      "type": "array",
+      "description": "List of nodes in the workflow",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/node"
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "List of connections between nodes",
+      "items": {
+        "$ref": "#/definitions/connection"
+      }
+    },
+    "settings": {
+      "$ref": "#/definitions/settings"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "properties": {
+        "author": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "node": {
+      "type": "object",
+      "required": ["id", "type", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique node instance ID within workflow",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "type": {
+          "type": "string",
+          "description": "Node type (matches NodeMetadata.id)",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable node name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "position": {
+          "type": "object",
+          "description": "Node position for visualization",
+          "required": ["x", "y"],
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "config": {
+          "type": "object",
+          "description": "Node-specific configuration",
+          "additionalProperties": true
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Whether the node is disabled",
+          "default": false
+        }
+      }
+    },
+    "connection": {
+      "type": "object",
+      "required": ["from", "fromOutput", "to"],
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Source node ID"
+        },
+        "fromOutput": {
+          "type": "string",
+          "description": "Source node output name",
+          "default": "success"
+        },
+        "to": {
+          "type": "string",
+          "description": "Target node ID"
+        },
+        "toInput": {
+          "type": "string",
+          "description": "Target node input name (optional)"
+        },
+        "condition": {
+          "type": "string",
+          "description": "Conditional expression (for future use)"
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "description": "Workflow execution settings",
+      "properties": {
+        "timeout": {
+          "type": "integer",
+          "description": "Workflow timeout in milliseconds",
+          "minimum": 1000,
+          "maximum": 600000,
+          "default": 30000
+        },
+        "retryPolicy": {
+          "type": "object",
+          "description": "Retry policy for failed nodes",
+          "properties": {
+            "maxRetries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10,
+              "default": 0
+            },
+            "backoff": {
+              "type": "string",
+              "enum": ["linear", "exponential"],
+              "default": "exponential"
+            },
+            "initialDelay": {
+              "type": "integer",
+              "description": "Initial delay in milliseconds",
+              "minimum": 100,
+              "default": 1000
+            }
+          }
+        },
+        "logging": {
+          "type": "object",
+          "description": "Logging configuration",
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": ["debug", "info", "warn", "error"],
+              "default": "info"
+            },
+            "traceExecution": {
+              "type": "boolean",
+              "description": "Enable execution tracing",
+              "default": true
+            }
+          }
+        },
+        "concurrency": {
+          "type": "object",
+          "description": "Concurrency settings",
+          "properties": {
+            "maxParallel": {
+              "type": "integer",
+              "description": "Maximum parallel node executions",
+              "minimum": 1,
+              "default": 10
+            }
+          }
+        },
+        "errorHandling": {
+          "type": "object",
+          "description": "Error handling strategy",
+          "properties": {
+            "stopOnError": {
+              "type": "boolean",
+              "description": "Stop workflow on first error",
+              "default": true
+            },
+            "continueOnNodeError": {
+              "type": "boolean",
+              "description": "Continue workflow even if non-critical nodes fail",
+              "default": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -64,9 +64,11 @@ export async function onRequestPost(context: {
       );
     }
 
-    // 3. 验证 CORS
+    // 3. 验证 CORS（使用支持通配符的验证函数）
     const origin = request.headers.get('Origin');
-    if (origin && !companyConfig.allowedOrigins.includes(origin)) {
+    const { isOriginAllowed } = await import('../lib/companyConfig.js');
+    
+    if (origin && !isOriginAllowed(companyConfig, origin)) {
       console.warn(`[Chat-${companyId}] Origin not allowed: ${origin}`);
       return new Response(
         JSON.stringify({ error: 'CORS not allowed' }),
@@ -81,7 +83,7 @@ export async function onRequestPost(context: {
     const url = new URL(request.url);
     const baseUrl = `${url.protocol}//${url.host}`;
     const knowledgeBase = new KnowledgeBase(companyId);
-    await knowledgeBase.load(baseUrl);
+    await knowledgeBase.load(baseUrl, env.ASSETS);
 
     console.log(`[Chat-${companyId}] Knowledge base loaded`);
 

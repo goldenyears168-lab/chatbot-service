@@ -1,0 +1,85 @@
+{
+  "id": "build-response",
+  "name": "Build Response",
+  "version": "1.0.0",
+  "category": "core",
+  "description": "构建最终的 HTTP 响应，包含回复、意图、上下文等",
+  "icon": "📦",
+  "color": "#607D8B",
+  
+  "inputs": [
+    {
+      "name": "reply",
+      "type": "string",
+      "required": true,
+      "description": "回复文本"
+    },
+    {
+      "name": "intent",
+      "type": "string",
+      "required": true,
+      "description": "用户意图"
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "required": true,
+      "description": "用户消息"
+    },
+    {
+      "name": "conversationContext",
+      "type": "ConversationContext",
+      "required": true,
+      "description": "对话上下文"
+    },
+    {
+      "name": "mergedEntities",
+      "type": "object",
+      "required": true,
+      "description": "合并的实体"
+    },
+    {
+      "name": "contextManager",
+      "type": "ContextManager",
+      "required": true,
+      "description": "上下文管理器"
+    },
+    {
+      "name": "knowledgeBase",
+      "type": "KnowledgeBase",
+      "required": true,
+      "description": "知识库"
+    },
+    {
+      "name": "corsHeaders",
+      "type": "object",
+      "required": true,
+      "description": "CORS headers"
+    },
+    {
+      "name": "nextState",
+      "type": "string",
+      "required": true,
+      "description": "下一个状态"
+    },
+    {
+      "name": "startTime",
+      "type": "number",
+      "required": false,
+      "description": "请求开始时间"
+    }
+  ],
+  
+  "outputs": [
+    {
+      "name": "success",
+      "type": "Response",
+      "description": "构建的 HTTP 响应"
+    }
+  ],
+  
+  "config": {
+    "logResponseTime": true,
+    "includeDebugInfo": false
+  }
+}

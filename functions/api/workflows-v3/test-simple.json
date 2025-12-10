@@ -1,0 +1,74 @@
+{
+  "id": "test-simple-workflow",
+  "name": "Simple Test Workflow",
+  "version": "1.0.0",
+  "description": "A simple 3-node workflow for testing Pipeline v3",
+  
+  "nodes": [
+    {
+      "id": "input-node",
+      "type": "input-validator",
+      "name": "Validate Input",
+      "position": { "x": 100, "y": 100 },
+      "config": {
+        "requiredFields": ["message"],
+        "maxMessageLength": 1000
+      }
+    },
+    {
+      "id": "processor-node",
+      "type": "message-processor",
+      "name": "Process Message",
+      "position": { "x": 300, "y": 100 },
+      "config": {
+        "addTimestamp": true,
+        "toLowerCase": false
+      }
+    },
+    {
+      "id": "output-node",
+      "type": "response-builder",
+      "name": "Build Response",
+      "position": { "x": 500, "y": 100 },
+      "config": {
+        "format": "json",
+        "includeMetadata": true
+      }
+    }
+  ],
+  
+  "connections": [
+    {
+      "from": "input-node",
+      "fromOutput": "success",
+      "to": "processor-node"
+    },
+    {
+      "from": "processor-node",
+      "fromOutput": "success",
+      "to": "output-node"
+    }
+  ],
+  
+  "settings": {
+    "timeout": 30000,
+    "retryPolicy": {
+      "maxRetries": 2,
+      "backoff": "exponential",
+      "initialDelay": 1000
+    },
+    "logging": {
+      "level": "info",
+      "traceExecution": true
+    },
+    "concurrency": {
+      "maxParallel": 3
+    }
+  },
+  
+  "metadata": {
+    "author": "Pipeline Team",
+    "created": "2025-12-10T00:00:00Z",
+    "tags": ["test", "simple", "demo"]
+  }
+}

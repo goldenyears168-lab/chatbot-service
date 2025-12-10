@@ -1,0 +1,49 @@
+{
+  "id": "intent-extraction",
+  "name": "Intent Extraction",
+  "version": "1.0.0",
+  "category": "core",
+  "description": "提取用户意图和实体，支持多轮对话上下文",
+  "icon": "🎯",
+  "color": "#E91E63",
+  
+  "inputs": [
+    {
+      "name": "message",
+      "type": "string",
+      "required": true,
+      "description": "用户消息"
+    },
+    {
+      "name": "knowledgeBase",
+      "type": "KnowledgeBase",
+      "required": true,
+      "description": "知识库实例"
+    },
+    {
+      "name": "conversationContext",
+      "type": "ConversationContext",
+      "required": true,
+      "description": "对话上下文"
+    }
+  ],
+  
+  "outputs": [
+    {
+      "name": "success",
+      "type": "object",
+      "description": "提取的意图和实体"
+    },
+    {
+      "name": "error",
+      "type": "Error",
+      "description": "提取失败"
+    }
+  ],
+  
+  "config": {
+    "useContextIntent": true,
+    "mergeEntities": true,
+    "enableFallback": true
+  }
+}
