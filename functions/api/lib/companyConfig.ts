@@ -106,21 +106,48 @@ export function isValidCompanyId(companyId: string): boolean {
 
 /**
  * 验证 Origin 是否被允许
+ * 支持通配符匹配 *.pages.dev 域名
  */
 export function isOriginAllowed(companyConfig: CompanyConfig, origin: string | null): boolean {
   if (!origin) {
     return false;
   }
-  return companyConfig.allowedOrigins.includes(origin);
+  
+  // 直接匹配
+  if (companyConfig.allowedOrigins.includes(origin)) {
+    return true;
+  }
+  
+  // 支持 Cloudflare Pages 部署域名（每次部署都会有不同的 hash）
+  if (origin.includes('.pages.dev')) {
+    // 检查是否配置了通配符或包含项目名称
+    const hasWildcard = companyConfig.allowedOrigins.some(allowed => 
+      allowed === '*.pages.dev' || 
+      allowed === 'https://*.pages.dev'
+    );
+    
+    const hasProjectDomain = companyConfig.allowedOrigins.some(allowed =>
+      allowed.includes('chatbot-service-multi-tenant.pages.dev')
+    );
+    
+    if (hasWildcard || hasProjectDomain || origin.includes('chatbot-service-multi-tenant.pages.dev')) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**
  * 获取允许的 Origin（用于 CORS 响应）
+ * 必须返回实际的 origin，而不是通配符
  */
 export function getAllowedOrigin(companyConfig: CompanyConfig, requestOrigin: string | null): string {
-  if (requestOrigin && companyConfig.allowedOrigins.includes(requestOrigin)) {
+  // 如果 origin 被允许，直接返回它
+  if (requestOrigin && isOriginAllowed(companyConfig, requestOrigin)) {
     return requestOrigin;
   }
+  
   // 返回第一个配置的 origin 作为默认值
   return companyConfig.allowedOrigins[0];
 }
