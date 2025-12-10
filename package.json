@@ -5,6 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "build": "cd functions && npm install",
     "build:css": "sass widget/src/widget.scss widget/widget.css --style=compressed",
     "dev": "wrangler pages dev .",
     "deploy": "wrangler pages deploy . --project-name=chatbot-service-multi-tenant",
