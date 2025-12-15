@@ -1,9 +1,20 @@
 {
+  "_file_description": "服务列表文件：定义所有服务项目，包括价格、描述、特色、适用人群等信息。这是系统的核心业务数据，用于价格查询、服务推荐和 AI 回复生成。",
   "version": "1.0.0",
   "last_updated": "2025-01-01",
   "data_source": "knowledge/services.json (單一事實來源)",
+  "_section_services": "服务列表：每个服务包含基本信息、价格、适用人群、使用场景等",
   "services": [
     {
+      "_comment": "韓式證件照：适合需要正式证件照的客户（护照、身份证、签证等）",
+      "_field_description": {
+        "id": "服务唯一标识（用于代码引用，必须与 3-ai_config.json 中的 service_type 实体 ID 对应）",
+        "price_min": "最低价格（数字，用于价格比较和筛选）",
+        "target_audience": "目标客户群体（用于匹配客户类型）",
+        "use_cases": "使用场景（用于根据用途推荐服务）",
+        "pros": "优势特点（用于说明服务特色）",
+        "not_suitable": "不适合的情况（用于说明服务限制）"
+      },
       "id": "headshot_korean",
       "name": "韓式證件照",
       "name_en": "Korean Headshot",
@@ -37,7 +48,7 @@
       "one_line": "針對履歷與 LinkedIn 打造，兼具專業、自信與親和力的經典形象照。",
       "target_audience": ["上班族", "轉職者", "專業人士", "顧問", "律師", "醫師", "管理者"],
       "use_cases": ["履歷", "LinkedIn", "大頭貼", "公司官網", "名片", "講師/顧問個人頁"],
-      "price_range": "約 NT$999 / 張",
+      "price_range": " NT$999 / 張",
       "price_min": 999,
       "price_unit": "張",
       "pricing_model": "按張計費，低消 1 張",
@@ -63,9 +74,8 @@
       "one_line": "以故事性與情感為核心，紀錄人生階段與個人風格的質感寫真。",
       "target_audience": ["畢業生", "轉職中", "慶生/紀念日", "自媒體經營者", "有自我品牌需求者"],
       "use_cases": ["畢業紀念", "生日/人生階段紀念", "社群貼文", "個人品牌素材"],
-      "price_range": "約 NT$999–1,199 / 張",
+      "price_range": " NT$999 / 張",
       "price_min": 999,
-      "price_max": 1199,
       "price_unit": "張",
       "pricing_model": "按張計費",
       "shooting_time": "通常較形象照略長（依方案調整）",

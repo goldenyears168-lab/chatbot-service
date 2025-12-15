@@ -1,0 +1,16 @@
+{
+  "faqs": [
+    {
+      "id": "faq_1",
+      "question": "你們提供哪些服務？",
+      "answer": "我們提供企業諮詢服務和企業培訓課程兩大類服務。",
+      "category": "服務介紹"
+    },
+    {
+      "id": "faq_2",
+      "question": "如何聯絡你們？",
+      "answer": "您可以透過電話 +886-2-1234-5678 或 email contact@company-b.com 與我們聯繫。",
+      "category": "聯絡方式"
+    }
+  ]
+}

@@ -1,8 +1,43 @@
 {
   "version": "1.0.0",
   "last_updated": "2025-01-20",
-  "data_source": "knowledge/entity_patterns.json (實體提取配置)",
-  "patterns": {
+  "data_source": "knowledge/ai_config.json (合併 intent_config + entity_patterns + personas)",
+  "intents": [
+    {
+      "id": "greeting",
+      "priority": 10,
+      "keywords": ["你好", "您好", "hi", "hello"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    },
+    {
+      "id": "service_inquiry",
+      "priority": 11,
+      "keywords": ["服務", "方案", "諮詢", "培訓"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    },
+    {
+      "id": "price_inquiry",
+      "priority": 3,
+      "keywords": ["價格", "費用", "多少錢", "報價"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    },
+    {
+      "id": "contact_inquiry",
+      "priority": 5,
+      "keywords": ["聯絡", "電話", "地址", "email"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    }
+  ],
+  "fallback": {
+    "useContextIntent": true,
+    "contextIntentThreshold": 10,
+    "defaultIntent": "service_inquiry"
+  },
+  "entity_patterns": {
     "service_type": [
       {
         "id": "headshot_korean",
@@ -84,6 +119,17 @@
         "keywords": ["取消", "cancel"]
       }
     }
-  }
+  },
+  "personas": [
+    {
+      "id": "professional_assistant",
+      "name": "專業助理",
+      "tone": "專業、親切、有效率",
+      "characteristics": [
+        "使用專業但易懂的語言",
+        "主動提供解決方案",
+        "保持友善的溝通態度"
+      ]
+    }
+  ]
 }
-

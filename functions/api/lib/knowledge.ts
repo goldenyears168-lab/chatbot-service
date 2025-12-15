@@ -187,6 +187,7 @@ export interface EntityPatterns {
   };
 }
 
+
 export interface StateTransitionsConfig {
   version: string;
   last_updated: string;
@@ -206,13 +207,9 @@ export class KnowledgeBase {
   private policies: Policy[] = [];
   private contactInfo: ContactInfo | null = null;
   private responseTemplates: Record<string, ResponseTemplate> = {};
-  private serviceSummaries: Record<string, ServiceSummary> = {};
-  private emotionTemplates: Record<string, EmotionTemplate> = {};
-  private intentNBAMapping: Record<string, string[]> = {};
   private faqDetailed: FAQDetailed | null = null;
   private intentConfig: IntentConfig | null = null;
   private entityPatterns: EntityPatterns | null = null;
-  private stateTransitionsConfig: StateTransitionsConfig | null = null;
   private loaded = false;
 
   constructor(companyId: string = 'goldenyears') {
@@ -254,17 +251,40 @@ export class KnowledgeBase {
         }
       }
       
-      // 多租户：使用公司特定的知识库路径
-      const knowledgePath = `/knowledge/${this.companyId}/`;
-      console.log(`[Knowledge] Loading knowledge base for company: ${this.companyId}`);
-      
-      // 確保 baseUrl 不以 / 結尾（因為路徑已經包含 /）
+      // 確保 baseUrl 不以 / 結尾
       if (fetchBaseUrl && fetchBaseUrl.endsWith('/')) {
         fetchBaseUrl = fetchBaseUrl.slice(0, -1);
       }
       
-      // 構建完整的知識庫文件路徑（多租户）
-      const knowledgeBasePath = `${fetchBaseUrl}${knowledgePath}`.replace(/\/$/, '');
+      // 从注册表获取公司路径（新架构）
+      let companyPath: string;
+      try {
+        const registryUrl = `${fetchBaseUrl}/projects/registry.json`;
+        const registryResponse = await fetch(registryUrl);
+        
+        if (!registryResponse.ok) {
+          // 如果加载失败，尝试使用旧路径（向后兼容）
+          console.warn('[Knowledge] Failed to load registry, falling back to old path');
+          companyPath = `knowledge/${this.companyId}`;
+        } else {
+          const registry = await registryResponse.json();
+          const companyInfo = registry.companies?.[this.companyId];
+          
+          if (!companyInfo || !companyInfo.active) {
+            throw new Error(`Company ${this.companyId} not found or not active in registry`);
+          }
+          
+          companyPath = `projects/${companyInfo.path}/knowledge`;
+          console.log(`[Knowledge] Loading knowledge base for company: ${this.companyId} (path: ${companyPath})`);
+        }
+      } catch (error) {
+        // 向后兼容：如果加载注册表失败，使用旧路径
+        console.warn('[Knowledge] Error loading registry, using fallback path:', error);
+        companyPath = `knowledge/${this.companyId}`;
+      }
+      
+      // 構建完整的知識庫文件路徑
+      const knowledgeBasePath = `${fetchBaseUrl}/${companyPath}`.replace(/\/$/, '');
       
       console.log('[Knowledge] Loading knowledge files from:', knowledgeBasePath);
       
@@ -300,81 +320,48 @@ export class KnowledgeBase {
         }
       };
       
-      // 批量加载所有文件（使用队列避免连接限制）
+      // 批量加载所有文件（保持简单，不依赖配置文件）
       const [
         servicesRes,
+        companyInfoRes,
+        aiConfigRes,
         personasRes,
-        policiesRes,
-        contactInfoRes
-      ] = await Promise.all([
-        safeFetch('services.json'),
-        safeFetch('personas.json'),
-        safeFetch('policies.json'),
-        safeFetch('contact_info.json')
-      ]);
-      
-      const [
-        intentConfigRes,
-        entityPatternsRes,
-        stateTransitionsConfigRes,
+        responseTemplatesRes,
         faqDetailedRes
       ] = await Promise.all([
-        safeFetch('intent_config.json', false),
-        safeFetch('entity_patterns.json', false),
-        safeFetch('state_transitions.json', false),
-        safeFetch('faq_detailed.json', false)
-      ]);
-      
-      const [
-        responseTemplatesRes,
-        serviceSummariesRes,
-        emotionTemplatesRes,
-        intentNBAMappingRes
-      ] = await Promise.all([
-        safeFetch('response_templates.json', false),
-        safeFetch('service_summaries.json', false),
-        safeFetch('emotion_templates.json', false),
-        safeFetch('intent_nba_mapping.json', false)
+        safeFetch('1-services.json', false),
+        safeFetch('2-company_info.json'),
+        safeFetch('3-ai_config.json'),
+        safeFetch('3-personas.json', false),
+        safeFetch('4-response_templates.json', false),
+        safeFetch('5-faq_detailed.json', false)
       ]);
 
       // 解析 JSON
       console.log('[Knowledge] Parsing JSON responses...');
       
-      const [servicesData, personasData, policiesData, contactInfoData] = await Promise.all([
-        servicesRes!.json(),
-        personasRes!.json(),
-        policiesRes!.json(),
-        contactInfoRes!.json()
-      ]);
-      
-      const [intentConfigData, entityPatternsData, stateTransitionsConfigData, faqDetailedData] = await Promise.all([
-        intentConfigRes ? intentConfigRes.json().catch(() => null) : Promise.resolve(null),
-        entityPatternsRes ? entityPatternsRes.json().catch(() => null) : Promise.resolve(null),
-        stateTransitionsConfigRes ? stateTransitionsConfigRes.json().catch(() => null) : Promise.resolve(null),
-        faqDetailedRes ? faqDetailedRes.json().catch(() => null) : Promise.resolve(null)
-      ]);
-      
-      const [responseTemplatesData, serviceSummariesData, emotionTemplatesData, intentNBAMappingData] = await Promise.all([
+      const [servicesData, companyInfoData, aiConfigData, personasData, responseTemplatesData, faqDetailedData] = await Promise.all([
+        servicesRes ? servicesRes.json().catch(() => ({ services: [] })) : Promise.resolve({ services: [] }),
+        companyInfoRes!.json(),
+        aiConfigRes!.json(),
+        personasRes ? personasRes.json().catch(() => ({ personas: [] })) : Promise.resolve({ personas: [] }),
         responseTemplatesRes ? responseTemplatesRes.json().catch(() => ({ templates: {} })) : Promise.resolve({ templates: {} }),
-        serviceSummariesRes ? serviceSummariesRes.json().catch(() => ({ summaries: {} })) : Promise.resolve({ summaries: {} }),
-        emotionTemplatesRes ? emotionTemplatesRes.json().catch(() => ({ templates: {} })) : Promise.resolve({ templates: {} }),
-        intentNBAMappingRes ? intentNBAMappingRes.json().catch(() => ({ mappings: {} })) : Promise.resolve({ mappings: {} })
+        faqDetailedRes ? faqDetailedRes.json().catch(() => null) : Promise.resolve(null)
       ]);
 
       // 載入資料
       this.services = servicesData.services || [];
-      this.personas = personasData.personas || [];
-      this.policies = policiesData.policies || [];
       
+      // 从 company_info.json 提取联系信息和政策
       this.contactInfo = {
-        branches: contactInfoData.branches || [],
-        contact_channels: contactInfoData.contact_channels || {
+        branches: companyInfoData.branches || [],
+        contact_channels: companyInfoData.contact_channels || {
           email: '',
           ig: '',
           line: { available: false, message: '' },
           booking_link: '',
         },
-        ai_response_rules: contactInfoData.ai_response_rules || {
+        ai_response_rules: companyInfoData.ai_response_rules || {
           line_inquiry: '',
           handoff_to_human: {
             email: '',
@@ -384,16 +371,34 @@ export class KnowledgeBase {
           },
         },
       };
+      this.policies = companyInfoData.policies || [];
+      
+      // 从 ai_config.json 提取意图和实体配置
+      this.intentConfig = aiConfigData.intents ? {
+        version: aiConfigData.version || '1.0.0',
+        last_updated: aiConfigData.last_updated || '',
+        data_source: aiConfigData.data_source || '',
+        intents: aiConfigData.intents || [],
+        fallback: aiConfigData.fallback || {
+          useContextIntent: true,
+          contextIntentThreshold: 10,
+          defaultIntent: 'service_inquiry'
+        }
+      } : null;
+      
+      this.entityPatterns = aiConfigData.entity_patterns ? {
+        version: aiConfigData.version || '1.0.0',
+        last_updated: aiConfigData.last_updated || '',
+        data_source: aiConfigData.data_source || '',
+        patterns: aiConfigData.entity_patterns || {}
+      } : null;
+      
+      // 从 personas.json 提取客户画像
+      this.personas = personasData.personas || [];
 
-      // 載入新的資料結構
+      // 載入資料結構
       this.responseTemplates = responseTemplatesData.templates || {};
-      this.serviceSummaries = serviceSummariesData.summaries || {};
-      this.emotionTemplates = emotionTemplatesData.templates || {};
-      this.intentNBAMapping = intentNBAMappingData.mappings || {};
       this.faqDetailed = faqDetailedData || null;
-      this.intentConfig = intentConfigData || null;
-      this.entityPatterns = entityPatternsData || null;
-      this.stateTransitionsConfig = stateTransitionsConfigData || null;
 
       console.log('[Knowledge] Knowledge base loaded successfully');
       console.log(`[Knowledge] Loaded ${this.services.length} services, ${this.personas.length} personas, ${this.policies.length} policies`);
@@ -402,9 +407,6 @@ export class KnowledgeBase {
       }
       if (this.entityPatterns) {
         console.log('[Knowledge] Loaded entity patterns config');
-      }
-      if (this.stateTransitionsConfig) {
-        console.log(`[Knowledge] Loaded state transitions config with ${this.stateTransitionsConfig.states.length} states`);
       }
 
       this.loaded = true;
@@ -512,59 +514,91 @@ export class KnowledgeBase {
 
   /**
    * 取得回覆模板
+   * 支持两种格式：
+   * 1. 对象格式：{ main_answer, supplementary_info, next_best_actions }
+   * 2. 字符串格式（向后兼容）：直接是字符串
    */
   getResponseTemplate(intent: string): ResponseTemplate | null {
     if (!this.loaded) {
       throw new Error('Knowledge base not loaded. Call load() first.');
     }
-    return this.responseTemplates[intent] || null;
+    const template = this.responseTemplates[intent];
+    if (!template) {
+      return null;
+    }
+    
+    // 如果是字符串格式（向后兼容），转换为对象格式
+    if (typeof template === 'string') {
+      return {
+        main_answer: template,
+        supplementary_info: '',
+        next_best_actions: []
+      };
+    }
+    
+    // 已经是对象格式，直接返回
+    return template as ResponseTemplate;
   }
 
   /**
-   * 取得服務摘要
+   * 取得服務摘要（從 services.json 生成，已移除 service_summaries.json）
    */
   getServiceSummary(serviceId: string): ServiceSummary | null {
     if (!this.loaded) {
       throw new Error('Knowledge base not loaded. Call load() first.');
     }
-    return this.serviceSummaries[serviceId] || null;
+    // Fallback: 從 services.json 中的服務資訊生成摘要
+    const service = this.services.find(s => s.id === serviceId);
+    if (!service) {
+      return null;
+    }
+    // 返回一個簡化的摘要結構（如果需要，可以從 service 物件中提取資訊）
+    return {
+      core_purpose: service.one_line || '',
+      price_pricing: service.price_range || '',
+      shooting_time_selection: (service as any).shooting_time || '',
+      delivery_speed: (service as any).delivery_time || '',
+      add_ons_limitations: ((service as any).add_ons || []).join('、')
+    } as ServiceSummary;
   }
 
   /**
-   * 取得情緒模板
+   * 取得情緒模板（已移除 emotion_templates.json，返回 null）
    */
   getEmotionTemplate(emotion: string): EmotionTemplate | null {
     if (!this.loaded) {
       throw new Error('Knowledge base not loaded. Call load() first.');
     }
-    return this.emotionTemplates[emotion] || null;
+    // 已移除 emotion_templates.json，返回 null
+    // LLM 會自行處理情緒場景
+    return null;
   }
 
   /**
-   * 根據關鍵字搜尋情緒模板
+   * 根據關鍵字搜尋情緒模板（已移除 emotion_templates.json，返回 null）
    */
   findEmotionTemplateByKeywords(message: string): EmotionTemplate | null {
     if (!this.loaded) {
       throw new Error('Knowledge base not loaded. Call load() first.');
     }
-    const lowerMessage = message.toLowerCase();
-    
-    for (const template of Object.values(this.emotionTemplates)) {
-      if (template.keywords.some(keyword => lowerMessage.includes(keyword.toLowerCase()))) {
-        return template;
-      }
-    }
+    // 已移除 emotion_templates.json，返回 null
+    // LLM 會自行處理情緒場景
     return null;
   }
 
   /**
-   * 取得意圖對應的 Next Best Actions
+   * 取得意圖對應的 Next Best Actions（已移除 intent_nba_mapping.json，使用 response_templates 作為 fallback）
    */
   getNextBestActions(intent: string): string[] {
     if (!this.loaded) {
       throw new Error('Knowledge base not loaded. Call load() first.');
     }
-    return this.intentNBAMapping[intent] || [];
+    // Fallback: 從 response_templates 中獲取 next_best_actions
+    const template = this.getResponseTemplate(intent);
+    if (template && template.next_best_actions && template.next_best_actions.length > 0) {
+      return template.next_best_actions;
+    }
+    return [];
   }
 
   /**
@@ -759,13 +793,15 @@ export class KnowledgeBase {
   }
 
   /**
-   * 取得狀態轉換配置
+   * 取得狀態轉換配置（已移除 state_transitions.json，返回 null）
    */
   getStateTransitionsConfig(): StateTransitionsConfig | null {
     if (!this.loaded) {
       throw new Error('Knowledge base not loaded. Call load() first.');
     }
-    return this.stateTransitionsConfig;
+    // 已移除 state_transitions.json，返回 null
+    // 狀態轉換邏輯將使用默認或硬編碼的方式處理
+    return null;
   }
 
   /**
@@ -813,5 +849,6 @@ export class KnowledgeBase {
     
     return menu;
   }
+
 }
 
