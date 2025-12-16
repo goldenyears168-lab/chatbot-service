@@ -32,9 +32,20 @@ export async function GET(
       
       if (manifestResponse.ok) {
         fileList = await manifestResponse.json()
+      } else {
+        // 如果清单文件不存在，尝试常见的文件名模式
+        const commonFiles = [
+          '1-company_info.json',
+          '2-ai_config.json',
+          '3-knowledge_base.json',
+          '4-services.json',
+          '5-faq_detailed.json',
+          '6-response_templates.json'
+        ]
+        fileList = commonFiles
       }
     } catch (error) {
-      // 如果清单文件不存在，尝试常见的文件名模式
+      // 如果清单文件读取失败，尝试常见的文件名模式
       const commonFiles = [
         '1-company_info.json',
         '2-ai_config.json',

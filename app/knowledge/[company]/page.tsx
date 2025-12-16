@@ -4,6 +4,7 @@ import { ErrorDisplay } from './ErrorDisplay'
 import { EmptyState } from './EmptyState'
 import { ClientConsole } from './components/ClientConsole'
 import { WidgetCodeDisplay } from './WidgetCodeDisplay'
+import { headers } from 'next/headers'
 
 interface KnowledgeFile {
   filename: string
@@ -20,14 +21,39 @@ interface KnowledgePageProps {
   params: Promise<{ company: string }> | { company: string }
 }
 
-async function getKnowledgeData(company: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
-  
-  if (!baseUrl) {
-    throw new Error('NEXT_PUBLIC_BASE_URL is required')
+async function getBaseUrl(): Promise<string> {
+  // 优先使用环境变量
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL
   }
   
+  // 在 Edge Runtime 中，从请求头中获取 baseUrl
+  try {
+    const headersList = await headers()
+    const host = headersList.get('host') || headersList.get('x-forwarded-host')
+    const protocol = headersList.get('x-forwarded-proto') || 
+                     (headersList.get('x-forwarded-ssl') === 'on' ? 'https' : 'http')
+    
+    if (host) {
+      return `${protocol}://${host}`
+    }
+  } catch (error) {
+    // 如果无法获取 headers，继续使用默认值
+  }
+  
+  // 开发环境默认值
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000'
+  }
+  
+  // 生产环境如果没有设置，抛出错误
+  throw new Error(
+    'NEXT_PUBLIC_BASE_URL environment variable is required in production. ' +
+    'Please set it in Cloudflare Pages environment variables.'
+  )
+}
+
+async function getKnowledgeData(company: string, baseUrl: string) {
   const response = await fetch(`${baseUrl}/api/knowledge/${company}`, {
     cache: 'no-store'
   })
@@ -45,8 +71,8 @@ export const runtime = 'edge'
 export default async function KnowledgePage({ params }: KnowledgePageProps) {
   const { company } = await Promise.resolve(params)
   
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
+  // 获取 baseUrl
+  const baseUrl = await getBaseUrl()
   
   let knowledgeData: any = null
   let companyConfig: any = null
@@ -54,7 +80,7 @@ export default async function KnowledgePage({ params }: KnowledgePageProps) {
   
   try {
     [knowledgeData, companyConfig] = await Promise.all([
-      getKnowledgeData(company),
+      getKnowledgeData(company, baseUrl),
       getCompanyConfig(company)
     ])
     
