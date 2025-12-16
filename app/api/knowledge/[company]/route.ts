@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readdir, readFile, stat } from 'fs/promises'
-import { join } from 'path'
 
-// 确保使用 Node.js runtime（需要文件系统访问）
-export const runtime = 'nodejs'
+// 使用 Edge Runtime（Cloudflare Pages 要求）
+export const runtime = 'edge'
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ company: string }> | { company: string } }
 ) {
   try {
@@ -19,18 +17,52 @@ export async function GET(
       )
     }
 
-    const cwd = process.cwd()
-    const knowledgeDir = join(cwd, 'projects', company, 'knowledge')
+    // 获取 base URL（从请求中推断）
+    const url = new URL(request.url)
+    const baseUrl = `${url.protocol}//${url.host}`
+    
+    // 从 public 目录读取清单文件
+    const manifestUrl = `${baseUrl}/projects/${company}/knowledge/_manifest.json`
+    let fileList: string[] = []
     
     try {
-      const files = await readdir(knowledgeDir)
-      const jsonFiles = files.filter(f => f.endsWith('.json'))
+      const manifestResponse = await fetch(manifestUrl, {
+        cache: 'no-store'
+      })
       
-      const fileList = await Promise.all(
-        jsonFiles.map(async (file) => {
-          const filePath = join(knowledgeDir, file)
-          const fileStat = await stat(filePath)
-          const content = await readFile(filePath, 'utf-8')
+      if (manifestResponse.ok) {
+        fileList = await manifestResponse.json()
+      }
+    } catch (error) {
+      // 如果清单文件不存在，尝试常见的文件名模式
+      const commonFiles = [
+        '1-company_info.json',
+        '2-ai_config.json',
+        '3-knowledge_base.json',
+        '4-services.json',
+        '5-faq_detailed.json',
+        '6-response_templates.json'
+      ]
+      fileList = commonFiles
+    }
+    
+    // 过滤出 JSON 文件
+    const jsonFiles = fileList.filter(f => f.endsWith('.json') && f !== '_manifest.json')
+    
+    // 并行读取所有文件
+    const fileDataList = await Promise.all(
+      jsonFiles.map(async (file) => {
+        try {
+          const fileUrl = `${baseUrl}/projects/${company}/knowledge/${file}`
+          const fileResponse = await fetch(fileUrl, {
+            cache: 'no-store'
+          })
+          
+          if (!fileResponse.ok) {
+            return null
+          }
+          
+          const content = await fileResponse.text()
           const data = JSON.parse(content)
           
           // 提取文件信息
@@ -38,38 +70,54 @@ export async function GET(
           const fileNumber = fileName.match(/^\d+/)?.[0] || '0'
           const fileKey = fileName.replace(/^\d+-/, '')
           
+          // 估算文件大小（字符数）
+          const size = new TextEncoder().encode(content).length
+          
           return {
             filename: file,
             name: fileName,
             key: fileKey,
             number: parseInt(fileNumber),
-            size: fileStat.size,
-            lastModified: fileStat.mtime.toISOString(),
+            size: size,
+            lastModified: new Date().toISOString(), // Edge Runtime 无法获取文件修改时间
             data: data,
             // 统计信息
             stats: getFileStats(fileKey, data)
           }
-        })
-      )
-      
-      // 按文件编号排序
-      fileList.sort((a, b) => a.number - b.number)
-      
-      return NextResponse.json({
-        company,
-        files: fileList,
-        totalFiles: fileList.length,
-        totalSize: fileList.reduce((sum, f) => sum + f.size, 0)
+        } catch (error) {
+          console.error(`Error loading file ${file}:`, error)
+          return null
+        }
       })
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        return NextResponse.json(
-          { error: `Knowledge directory not found for company: ${company}` },
-          { status: 404 }
-        )
-      }
-      throw error
+    )
+    
+    // 过滤掉 null 值并排序
+    const validFiles = fileDataList.filter(f => f !== null) as Array<{
+      filename: string
+      name: string
+      key: string
+      number: number
+      size: number
+      lastModified: string
+      data: any
+      stats: Record<string, any>
+    }>
+    
+    validFiles.sort((a, b) => a.number - b.number)
+    
+    if (validFiles.length === 0) {
+      return NextResponse.json(
+        { error: `Knowledge directory not found for company: ${company}` },
+        { status: 404 }
+      )
     }
+    
+    return NextResponse.json({
+      company,
+      files: validFiles,
+      totalFiles: validFiles.length,
+      totalSize: validFiles.reduce((sum, f) => sum + f.size, 0)
+    })
   } catch (error) {
     console.error('Error loading knowledge base:', error)
     return NextResponse.json(

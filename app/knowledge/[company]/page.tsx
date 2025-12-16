@@ -39,8 +39,8 @@ async function getKnowledgeData(company: string) {
   return response.json()
 }
 
-// 使用 Node.js runtime（需要檔案系統存取）
-export const runtime = 'nodejs'
+// 使用 Edge Runtime（Cloudflare Pages 要求）
+export const runtime = 'edge'
 
 export default async function KnowledgePage({ params }: KnowledgePageProps) {
   const { company } = await Promise.resolve(params)
