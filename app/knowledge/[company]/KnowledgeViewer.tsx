@@ -116,16 +116,17 @@ function renderServices(data: unknown) {
       {services.map((service: unknown, index: number) => {
         const serviceObj = typeof service === 'object' && service !== null ? service as Record<string, unknown> : {}
         return (
-        <div key={index} className="bg-background p-4 rounded-lg border border-border">
-          <h4 className="font-semibold text-foreground mb-1.5 text-base">{String(serviceObj.name || `服務 ${index + 1}`)}</h4>
-          {String(serviceObj.one_line) && (
-            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{String(serviceObj.one_line)}</p>
-          )}
-          {String(serviceObj.price_range) && (
-            <p className="text-xs text-muted-foreground font-medium">價格: {String(serviceObj.price_range || "")}</p>
-          )}
-        </div>
-        )})}
+          <div key={index} className="bg-background p-4 rounded-lg border border-border">
+            <h4 className="font-semibold text-foreground mb-1.5 text-base">{String(serviceObj.name || `服務 ${index + 1}`)}</h4>
+            {String(serviceObj.one_line) && (
+              <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{String(serviceObj.one_line)}</p>
+            )}
+            {String(serviceObj.price_range) && (
+              <p className="text-xs text-muted-foreground font-medium">價格: {String(serviceObj.price_range || "")}</p>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -168,7 +169,7 @@ function renderCompanyInfo(data: unknown) {
         </div>
       )}
       
-      {((dataObj.contact_channels || dataObj.contact) && (dataObj.contact_channels || dataObj.contact) !== null) && (
+      {((dataObj.contact_channels !== undefined && dataObj.contact_channels !== null) || (dataObj.contact !== undefined && dataObj.contact !== null)) && (
         <div>
           <h4 className="font-semibold text-foreground mb-3 text-base">聯絡方式</h4>
           <div className="bg-background p-4 rounded-lg border border-border">
@@ -212,15 +213,19 @@ function renderFAQ(data: unknown) {
           <div key={catKey} className="bg-background p-4 rounded-lg border border-border">
             <h4 className="font-semibold text-foreground mb-3 text-base">{category?.title || catKey}</h4>
             <div className="space-y-3">
-              {questions.map((q: unknown, index: number) => { const qObj = typeof q === "object" && q !== null ? q as Record<string, unknown> : {}; return (
-                <div key={index} className="text-sm">
-                  <p className="text-foreground font-semibold mb-1">Q: {String(qObj.question || "")}</p>
-                  <p className="text-muted-foreground text-xs mt-1.5 leading-relaxed">{String(qObj.answer || "")}</p>
-                </div>
-              ))}
+              {questions.map((q: unknown, index: number) => {
+                const qObj = typeof q === "object" && q !== null ? q as Record<string, unknown> : {}
+                return (
+                  <div key={index} className="text-sm">
+                    <p className="text-foreground font-semibold mb-1">Q: {String(qObj.question || "")}</p>
+                    <p className="text-muted-foreground text-xs mt-1.5 leading-relaxed">{String(qObj.answer || "")}</p>
+                  </div>
+                )
+              })}
             </div>
           </div>
-        )})}
+        )
+      })
     </div>
   )
 }
@@ -250,8 +255,10 @@ function renderAIConfig(data: unknown) {
         <div>
           <h4 className="font-semibold text-foreground mb-3 text-base">意圖識別 ({String(intents.length || "")} 個)</h4>
           <div className="space-y-3">
-            {intents.map((intent: unknown, index: number) => { const intentObj = typeof intent === "object" && intent !== null ? intent as Record<string, unknown> : {}; return (
-              <div key={String(intentObj.id) || index} className="bg-background p-4 rounded-lg border border-border">
+            {intents.map((intent: unknown, index: number) => {
+              const intentObj = typeof intent === "object" && intent !== null ? intent as Record<string, unknown> : {}
+              return (
+                <div key={String(intentObj.id) || index} className="bg-background p-4 rounded-lg border border-border">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <h5 className="font-semibold text-foreground text-sm mb-1">
@@ -307,7 +314,8 @@ function renderAIConfig(data: unknown) {
                   </div>
                 )}
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
@@ -335,8 +343,10 @@ function renderAIConfig(data: unknown) {
                     {entityType.replace(/_/g, ' ')}
                   </h5>
                   <div className="space-y-3">
-                    {entityList.map((entity: unknown, index: number) => { const entityObj = typeof entity === "object" && entity !== null ? entity as Record<string, unknown> : {}; return (
-                      <div key={String(entityObj.id) || index} className="bg-muted/30 p-3 rounded border border-border">
+                    {entityList.map((entity: unknown, index: number) => {
+                      const entityObj = typeof entity === "object" && entity !== null ? entity as Record<string, unknown> : {}
+                      return (
+                        <div key={String(entityObj.id) || index} className="bg-muted/30 p-3 rounded border border-border">
                         <div className="mb-2">
                           <span className="text-xs font-semibold text-foreground">
                             {String(entityObj.id) || `實體 ${index + 1}`}
@@ -359,10 +369,12 @@ function renderAIConfig(data: unknown) {
                           </div>
                         )}
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
-              )})}
+              )
+            })
           </div>
         </div>
       )}
@@ -423,7 +435,8 @@ function renderTemplates(data: unknown) {
               </div>
             )}
           </div>
-        )})}
+        )
+      })
     </div>
   )
 }

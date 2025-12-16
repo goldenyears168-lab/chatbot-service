@@ -4,7 +4,6 @@ import { ErrorDisplay } from './ErrorDisplay'
 import { EmptyState } from './EmptyState'
 import { ClientConsole } from './components/ClientConsole'
 import { WidgetCodeDisplay } from './WidgetCodeDisplay'
-import { headers } from 'next/headers'
 
 interface KnowledgeFile {
   filename: string
@@ -21,40 +20,18 @@ interface KnowledgePageProps {
   params: Promise<{ company: string }> | { company: string }
 }
 
-async function getBaseUrl(): Promise<string> {
-  // 优先使用环境变量
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL
-  }
+async function getKnowledgeData(company: string) {
+  // 在 Next.js Server Component 中，可以使用相对路径调用 API Route
+  // 这会自动使用当前请求的 base URL
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
   
-  // 在 Edge Runtime 中，从请求头中获取 baseUrl
-  try {
-    const headersList = await headers()
-    const host = headersList.get('host') || headersList.get('x-forwarded-host')
-    const protocol = headersList.get('x-forwarded-proto') || 
-                     (headersList.get('x-forwarded-ssl') === 'on' ? 'https' : 'http')
-    
-    if (host) {
-      return `${protocol}://${host}`
-    }
-  } catch (error) {
-    // 如果无法获取 headers，继续使用默认值
-  }
+  // 使用绝对路径（如果提供了 baseUrl）或相对路径
+  const apiUrl = baseUrl 
+    ? `${baseUrl}/api/knowledge/${company}`
+    : `/api/knowledge/${company}`
   
-  // 开发环境默认值
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000'
-  }
-  
-  // 生产环境如果没有设置，抛出错误
-  throw new Error(
-    'NEXT_PUBLIC_BASE_URL environment variable is required in production. ' +
-    'Please set it in Cloudflare Pages environment variables.'
-  )
-}
-
-async function getKnowledgeData(company: string, baseUrl: string) {
-  const response = await fetch(`${baseUrl}/api/knowledge/${company}`, {
+  const response = await fetch(apiUrl, {
     cache: 'no-store'
   })
   
@@ -65,14 +42,30 @@ async function getKnowledgeData(company: string, baseUrl: string) {
   return response.json()
 }
 
+function getBaseUrlForDisplay(): string {
+  // 用于 WidgetCodeDisplay 组件显示 baseUrl
+  // 优先使用环境变量
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL
+  }
+  
+  // 开发环境默认值
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000'
+  }
+  
+  // 生产环境返回空字符串，WidgetCodeDisplay 会处理
+  return ''
+}
+
 // 使用 Edge Runtime（Cloudflare Pages 要求）
 export const runtime = 'edge'
 
 export default async function KnowledgePage({ params }: KnowledgePageProps) {
   const { company } = await Promise.resolve(params)
   
-  // 获取 baseUrl
-  const baseUrl = await getBaseUrl()
+  // 获取用于显示的 baseUrl（可选）
+  const baseUrl = getBaseUrlForDisplay()
   
   let knowledgeData: any = null
   let companyConfig: any = null
@@ -80,7 +73,7 @@ export default async function KnowledgePage({ params }: KnowledgePageProps) {
   
   try {
     [knowledgeData, companyConfig] = await Promise.all([
-      getKnowledgeData(company, baseUrl),
+      getKnowledgeData(company),
       getCompanyConfig(company)
     ])
     
