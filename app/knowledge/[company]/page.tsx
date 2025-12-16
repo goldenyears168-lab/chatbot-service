@@ -86,12 +86,7 @@ export default async function KnowledgePage({ params }: KnowledgePageProps) {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
         {/* Header */}
-        <div className="mb-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">返回首頁</span>
-          </Link>
-          
+        <div className="mb-6">         
           <div className="flex items-center gap-4 mb-2">
             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
               {companyConfig?.name?.charAt(0) || company.charAt(0).toUpperCase()}

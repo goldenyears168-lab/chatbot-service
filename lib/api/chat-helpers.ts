@@ -150,7 +150,7 @@ function retrieveRelevantChunks(
           // 找到包含相关 tag 的 chunks
           for (const chunk of retrieval.chunks) {
             if (chunk.tags && Array.isArray(chunk.tags)) {
-              const hasMatchingTag = chunk.tags.some(tag => {
+              const hasMatchingTag = chunk.tags.some((tag: unknown) => {
                 const tagLower = String(tag).toLowerCase()
                 const keyLower = key.toLowerCase()
                 return tagLower.includes(keyLower) || keyLower.includes(tagLower)
