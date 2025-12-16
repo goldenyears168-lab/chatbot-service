@@ -133,10 +133,10 @@ export async function POST(
       // 继续执行，不阻塞响应
     }
     
-    // 2. 加载知识库和上下文
+    // 2. 加载知识库和上下文（传入用户消息以进行检索）
     const url = new URL(request.url)
     const baseUrl = `${url.protocol}//${url.host}`
-    const { systemPrompt } = await loadKnowledgeContext(company, baseUrl)
+    const { systemPrompt } = await loadKnowledgeContext(company, baseUrl, message)
     const contextMessages = await db.getConversationMessages(finalConversationId)
 
     // 3. 创建 Gemini 模型

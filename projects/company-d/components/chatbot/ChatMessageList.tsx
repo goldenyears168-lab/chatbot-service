@@ -1,5 +1,5 @@
 // components/chatbot/ChatMessageList.tsx
-// 聊天消息列表组件
+// 聊天訊息列表元件
 
 'use client'
 
@@ -75,7 +75,7 @@ export const ChatMessageList = memo(function ChatMessageList({
                     let content = msg.content || (msg.role === 'assistant' && isLoading ? '...' : '')
                     
                     // 如果启用 removeMarkdownBold，移除常见的 markdown 格式
-                    // 注意：这只是简单的文本处理，复杂的 markdown 应该在后端处理或使用专门的 renderer
+                    // 注意：這只是簡單的文字處理，複雜的 markdown 應該在後端處理或使用專門的 renderer
                     if (msg.role === 'assistant' && removeMarkdownBold && content) {
                       // 移除粗体标记 **text**
                       content = content.replace(/\*\*(.*?)\*\*/g, '$1')
@@ -88,7 +88,7 @@ export const ChatMessageList = memo(function ChatMessageList({
                     return content
                   })()}
                 </div>
-                {/* 显示预测问题选项 */}
+                {/* 顯示預測問題選項 */}
                 {msg.role === 'assistant' && !isLoading && msg.suggestedQuestions && msg.suggestedQuestions.length > 0 && (
                   <SuggestedQuestions
                     questions={msg.suggestedQuestions}
@@ -107,7 +107,7 @@ export const ChatMessageList = memo(function ChatMessageList({
           ))}
 
           {/* Loading Indicator */}
-          {/* 使用 isLoading 状态判断，而不是检查最后一条消息的 content */}
+          {/* 使用 isLoading 狀態判斷，而不是檢查最後一條訊息的 content */}
           {isLoading && (
             <div className="flex gap-3 justify-start">
               <Avatar className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0">

@@ -51,6 +51,7 @@ async function loadFromHTTP(companyId: string, baseUrl?: string): Promise<Knowle
       '2-company_info.json',
       '3-ai_config.json',
       '3-personas.json',
+      '3-knowledge_base.json',
       '4-response_templates.json',
       '5-faq_detailed.json',
     ]
@@ -66,6 +67,12 @@ async function loadFromHTTP(companyId: string, baseUrl?: string): Promise<Knowle
           const key = file.replace('.json', '').replace(/^\d+-/, '')
           knowledgeBase[key] = data
           loadedCount++
+          
+          // 对于 3-knowledge_base.json，同时设置多个键名以便访问
+          if (file === '3-knowledge_base.json') {
+            knowledgeBase['knowledge_base'] = data
+            knowledgeBase['3-knowledge_base'] = data
+          }
           
           // 同时设置带下划线的键名（兼容性）
           if (key.includes('_')) {

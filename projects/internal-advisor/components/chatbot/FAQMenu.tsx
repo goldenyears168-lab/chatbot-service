@@ -4,7 +4,7 @@
 'use client'
 
 import { memo, useState, useCallback } from 'react'
-import { Card } from '../ui/card'
+import { Card } from '@/components/ui/card'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 
 export interface FAQCategory {

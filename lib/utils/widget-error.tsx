@@ -1,8 +1,6 @@
 // lib/utils/widget-error.tsx
 // 统一的 Widget 错误处理组件
 
-import React from 'react'
-
 export interface WidgetErrorProps {
   title: string
   message: string

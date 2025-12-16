@@ -24,7 +24,6 @@ export function DynamicChatbotWidget(props: ChatbotWidgetProps) {
     
     // 组件加载只依赖于 companyId，因为不同项目的组件是不同的
     // 其他 props（如 apiEndpoint, pageType）的变化不需要重新加载组件
-    const loadKey = `${props.companyId}:ChatbotWidget`
     
     loadProjectChatbotComponent<ComponentType<ChatbotWidgetProps>>(
       props.companyId,

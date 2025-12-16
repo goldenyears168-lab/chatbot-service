@@ -2,9 +2,9 @@
   "version": "1.0.0",
   "last_updated": "2025-01-20",
   "data_source": "knowledge/ai_config.json (合併 intent_config + entity_patterns + personas)",
-  "_section_ui": "UI 配置：控制前端显示行为",
+  "_section_ui": "UI 設定：控制前端顯示行為",
   "ui": {
-    "_comment": "UI 显示配置",
+    "_comment": "UI 顯示設定",
     "removeMarkdownBold": true,
     "_field_description": {
       "removeMarkdownBold": "是否移除 AI 回复中的 ** 标记（true: 移除，false: 保留或转换为 HTML 粗体）"

@@ -52,6 +52,15 @@ const COMPANY_REGISTRY: CompanyRegistry = {
       group: null,
       active: true,
       deployment: "shared"
+    },
+    "bonus-advisor": {
+      id: "bonus-advisor",
+      name: "年終獎金顧問",
+      name_en: "Bonus Advisor",
+      path: "bonus-advisor",
+      group: null,
+      active: true,
+      deployment: "shared"
     }
   }
 } as CompanyRegistry

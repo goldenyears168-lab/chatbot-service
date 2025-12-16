@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { Button } from '../ui/button'
-import { ChatDialog } from '../ui/chat-dialog'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { X } from 'lucide-react'
 import { useMemo, useCallback } from 'react'
 import { clientLogger } from '@/lib/client-logger'
@@ -80,7 +80,7 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
     }),
     onError: (error) => {
       clientLogger.error('Chat error', error)
-      // 如果错误是 JSON 格式的错误消息，记录详细信息
+      // 如果錯誤是 JSON 格式的錯誤訊息，記錄詳細資訊
       if (error instanceof Error) {
         try {
           const errorData = JSON.parse(error.message)
@@ -397,60 +397,62 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
         </Button>
       )}
 
-      <ChatDialog open={isOpen} onOpenChange={setIsOpen} className="overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg sm:text-xl font-bold text-white truncate">
-              {companyName ? `${companyName} AI 形象顧問` : 'AI 形象顧問'}
-            </h2>
-            <p className="text-xs sm:text-sm text-blue-100 mt-0.5" aria-label="選方案、解釋流程">選方案、解釋流程</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        {/* Messages Area - 唯一的滚动容器 */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          {messages.length === 0 ? (
-            <div className="h-full overflow-y-auto bg-gradient-to-b from-gray-50 to-white p-4 sm:p-6">
-              <ChatWelcome
-                welcomeMessage={
-                  companyName
-                    ? `嗨，我是${companyName}的 AI 顧問。可以幫你推薦方案、說明流程、解說價格。`
-                    : '嗨，我是 AI 顧問。可以幫你推薦方案、說明流程、解說價格。'
-                }
-                welcomeSubtext="你可以直接跟我說你的狀況，或先用下面的快速選項開始。"
-                faqMenu={faqMenu}
-                onQuestionClick={handleFAQQuestionClick}
-                isLoading={isLoading}
-              />
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-lg h-[900px] flex flex-col p-0 gap-0 rounded-2xl overflow-hidden shadow-2xl [&>button]:hidden !left-auto !top-auto !right-28 !bottom-6 !translate-x-0 !translate-y-0">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-lg sm:text-xl font-bold text-white truncate">
+                {companyName ? `${companyName} 年終獎金顧問` : '年終獎金顧問'}
+              </DialogTitle>
+              <p className="text-xs sm:text-sm text-blue-100 mt-0.5" aria-label="企業階段診斷、獎金分配建議">企業階段診斷、獎金分配建議</p>
             </div>
-          ) : (
-            <ChatMessageList 
-              messages={displayMessages} 
-              isLoading={isLoading}
-              onQuestionClick={handleFAQQuestionClick}
-              removeMarkdownBold={uiConfig.removeMarkdownBold !== false}
-            />
-          )}
-        </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          {/* Messages Area - 唯一的滚动容器 */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            {messages.length === 0 ? (
+              <div className="h-full overflow-y-auto bg-gradient-to-b from-gray-50 to-white p-4 sm:p-6">
+                <ChatWelcome
+                  welcomeMessage={
+                    companyName
+                      ? `您好！我是${companyName}的年終獎金顧問。我可以協助您：診斷企業發展階段、計算 HR Ratio 風險、建議獎金池金額，以及提供基於增長引擎的部門分配方案。`
+                      : '您好！我是年終獎金顧問。我可以協助您：診斷企業發展階段、計算 HR Ratio 風險、建議獎金池金額，以及提供基於增長引擎的部門分配方案。'
+                  }
+                  welcomeSubtext="請告訴我您的企業資訊（營收、行業、毛利、人事成本、部門配置），或使用下方的快速問題開始。"
+                  faqMenu={faqMenu}
+                  onQuestionClick={handleFAQQuestionClick}
+                  isLoading={isLoading}
+                />
+              </div>
+            ) : (
+              <ChatMessageList 
+                messages={displayMessages} 
+                isLoading={isLoading}
+                onQuestionClick={handleFAQQuestionClick}
+                removeMarkdownBold={uiConfig.removeMarkdownBold !== false}
+              />
+            )}
+          </div>
 
-        {/* Input Area - 固定在底部，支持安全区域 */}
-        <div className="flex-shrink-0">
-          <ChatInput
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            placeholder="直接跟我說你的狀況，例如：我是..."
-          />
-        </div>
-      </ChatDialog>
+          {/* Input Area - 固定在底部，支持安全区域 */}
+          <div className="flex-shrink-0">
+            <ChatInput
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              placeholder="請輸入您的問題，例如：我的企業屬於哪個階段？如何計算年終獎金池？"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

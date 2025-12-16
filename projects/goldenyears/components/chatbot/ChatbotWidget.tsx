@@ -27,14 +27,14 @@ interface ChatbotWidgetProps {
 // Types are now imported from sub-components
 
 export function ChatbotWidget(props: ChatbotWidgetProps) {
-  // 防御性检查：确保 props 不为 null/undefined
+  // 防禦性檢查：確保 props 不為 null/undefined
   if (!props) {
     console.error('ChatbotWidget: props is null or undefined')
     return (
       <div className="h-screen w-full flex items-center justify-center">
         <div className="text-center p-6">
-          <p className="text-red-500 font-semibold mb-2">组件参数错误</p>
-          <p className="text-gray-600 text-sm">组件未接收到有效的参数</p>
+          <p className="text-red-500 font-semibold mb-2">元件參數錯誤</p>
+          <p className="text-gray-600 text-sm">元件未接收到有效的參數</p>
         </div>
       </div>
     )
@@ -80,7 +80,7 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
     }),
     onError: (error) => {
       clientLogger.error('Chat error', error)
-      // 如果错误是 JSON 格式的错误消息，记录详细信息
+      // 如果錯誤是 JSON 格式的錯誤訊息，記錄詳細資訊
       if (error instanceof Error) {
         try {
           const errorData = JSON.parse(error.message)
@@ -152,15 +152,15 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
     return null
   }, [faqMenu])
   
-  // 处理菜单问题点击（直接显示 FAQ 答案，不调用 API）
-  // 注意：菜单项和预测问题都应该在 FAQ 中，如果找不到，记录错误但不调用 AI
+  // 處理選單問題點擊（直接顯示 FAQ 答案，不呼叫 API）
+  // 注意：選單項目和預測問題都應該在 FAQ 中，如果找不到，記錄錯誤但不呼叫 AI
   const handleFAQQuestionClick = useCallback(async (question: string) => {
     const faqAnswer = findFAQAnswer(question)
     
     if (faqAnswer) {
-      // 找到预设答案，直接添加消息，不调用 API
+      // 找到預設答案，直接新增訊息，不呼叫 API
       try {
-        // 生成消息 ID（使用 crypto.randomUUID() 避免碰撞）
+        // 產生訊息 ID（使用 crypto.randomUUID() 避免碰撞）
         const userMessageId = `user-${crypto.randomUUID()}`
         const assistantMessageId = `assistant-${crypto.randomUUID()}`
         
@@ -184,13 +184,13 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
         clientLogger.error('Failed to add FAQ messages', error)
       }
     } else {
-      // 菜单项或预测问题应该在 FAQ 中，如果找不到，记录错误但不调用 AI
-      // 这种情况不应该发生，可能是 FAQ 数据配置问题
+      // 選單項目或預測問題應該在 FAQ 中，如果找不到，記錄錯誤但不呼叫 AI
+      // 這種情況不應該發生，可能是 FAQ 資料設定問題
       clientLogger.error('FAQ question not found in menu/suggested questions', { 
         question,
         availableCategories: faqMenu ? Object.keys(faqMenu.categories || {}) : []
       })
-      // 显示错误提示给用户，但不调用 AI API
+      // 顯示錯誤提示給用戶，但不呼叫 AI API
       const userMessageId = `user-${crypto.randomUUID()}`
       const errorMessageId = `assistant-${crypto.randomUUID()}`
       // 使用 functional update 避免 stale state
@@ -252,7 +252,7 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
     }
   }, [findFAQAnswer, setMessages, sendMessage])
   
-  // 转换 useChat 的消息格式为组件使用的格式
+  // 轉換 useChat 的訊息格式為元件使用的格式
   // UIMessage 使用 parts 数组，需要提取文本内容
   // 使用 useMemo 优化，避免每次渲染都重新计算
   const displayMessages: Message[] = useMemo(() => {
@@ -263,7 +263,7 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
       ) || []
       const content = textParts.map(part => part.text).join('')
       
-      // 如果消息没有内容，记录警告
+      // 如果訊息沒有內容，記錄警告
       if (msg.role === 'assistant' && !content) {
         clientLogger.warn('Assistant message has no text content', {
           id: msg.id,
@@ -271,10 +271,10 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
         })
       }
       
-      // 为 AI 消息添加预测问题（从 FAQ 中查找）
+      // 為 AI 訊息新增預測問題（從 FAQ 中查找）
       let suggestedQuestions: string[] | undefined
       if (msg.role === 'assistant' && content) {
-        // 找到对应的用户消息（上一条消息）
+        // 找到對應的用戶訊息（上一條訊息）
         const prevMessage = index > 0 ? messages[index - 1] : null
         const userMessage = prevMessage && prevMessage.role === 'user'
           ? prevMessage.parts?.filter((part): part is { type: 'text'; text: string } => 
@@ -282,7 +282,7 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
             ).map(part => part.text).join('') || ''
           : ''
         
-        // 在 FAQ 中查找用户问题，获取 next_best_actions
+        // 在 FAQ 中查找用戶問題，取得 next_best_actions
         if (userMessage) {
           const faqAnswer = findFAQAnswer(userMessage)
           if (faqAnswer && faqAnswer.next_best_actions && faqAnswer.next_best_actions.length > 0) {
@@ -318,7 +318,7 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
           // 这里先使用环境变量，后续可以扩展 config API
         }
       } catch (error) {
-        // 忽略配置加载错误
+        // 忽略設定載入錯誤
       }
       
       // 使用环境变量或安全的回退策略
@@ -373,7 +373,7 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
       return
     }
     
-    // 使用与 ready 消息相同的安全策略
+    // 使用與 ready 訊息相同的安全策略
     const envOrigin = process.env.NEXT_PUBLIC_WIDGET_ORIGIN
     if (envOrigin) {
       window.parent.postMessage({ type: 'smartbot-close' }, envOrigin)

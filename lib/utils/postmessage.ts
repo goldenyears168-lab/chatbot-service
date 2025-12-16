@@ -27,12 +27,10 @@ function isOriginAllowed(targetOrigin: string, allowedOrigins: string[]): boolea
  * 安全地发送 postMessage
  * @param message 要发送的消息
  * @param allowedOrigins 允许的 origin 列表（从配置中获取）
- * @param fallbackOrigin 回退 origin（如果配置未设置）
  */
 export function safePostMessage(
   message: any,
-  allowedOrigins?: string[],
-  fallbackOrigin?: string
+  allowedOrigins?: string[]
 ): void {
   if (window.parent === window) {
     // 不在 iframe 中，不需要发送
@@ -54,8 +52,10 @@ export function safePostMessage(
     // 所以我们需要选择一个安全的默认值
     const defaultOrigin = allowedOrigins.find(origin => !origin.includes('*')) || allowedOrigins[0]
     // 移除通配符，使用第一个非通配符的 origin，或使用 fallback
-    const safeOrigin = defaultOrigin.replace(/\*/g, '')
-    window.parent.postMessage(message, safeOrigin || '*')
+    if (defaultOrigin) {
+      const safeOrigin = defaultOrigin.replace(/\*/g, '')
+      window.parent.postMessage(message, safeOrigin || '*')
+    }
     return
   }
   

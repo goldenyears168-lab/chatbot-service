@@ -1,7 +1,7 @@
 {
-  "id": "internal-advisor",
-  "name": "内部解惑顾问",
-  "name_en": "Internal Advisor",
+  "id": "bonus-advisor",
+  "name": "年終獎金顧問",
+  "name_en": "Bonus Advisor",
   "allowedOrigins": [
     "https://*.pages.dev",
     "http://localhost:8080",

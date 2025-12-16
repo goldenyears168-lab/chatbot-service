@@ -50,10 +50,13 @@ export async function loadProjectComponent<T = ComponentType<any>>(
       const exportedKeys = Object.keys(projectComponent)
       const functionExports = exportedKeys.filter(key => 
         typeof projectComponent[key] === 'function' && 
-        key[0] === key[0].toUpperCase() // React 组件通常首字母大写
+        key[0] && key[0] === key[0].toUpperCase() // React 组件通常首字母大写
       )
       if (functionExports.length > 0) {
-        Component = projectComponent[functionExports[0]]
+        const firstExport = functionExports[0]
+        if (firstExport) {
+          Component = projectComponent[firstExport]
+        }
       }
     }
     

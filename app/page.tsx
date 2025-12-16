@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { getCompanyRegistry } from '@/lib/config'
 import Link from 'next/link'
-import { Building2, TestTube, BookOpen, Zap, Settings, FileText, Satellite, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
+import { Building2, BookOpen, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 
 export default async function HomePage() {
   const registry = await getCompanyRegistry()
@@ -56,14 +56,14 @@ export default async function HomePage() {
           </CardContent>
         </Card>
 
-        {/* Company Test Page Management */}
+        {/* Project Test Page Management */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <Building2 className="w-6 h-6 text-gray-700" />
-            <h2 className="text-2xl font-bold text-gray-900">公司測試頁面管理</h2>
+            <h2 className="text-2xl font-bold text-gray-900">專案測試頁面管理</h2>
           </div>
           <p className="text-gray-600 mb-6">
-            每個公司都有獨立的測試環境,可在部署到主網站前進行驗證
+            每個專案都有獨立的測試環境,可在部署到主網站前進行驗證
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -98,14 +98,14 @@ export default async function HomePage() {
               </Card>
             ))}
 
-            {/* Add New Company Card */}
+            {/* Add New Project Card */}
             <Card className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors bg-gray-50/50">
               <CardHeader>
                 <div className="flex flex-col items-center justify-center py-4">
                   <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mb-3">
                     <span className="text-2xl text-gray-500">+</span>
                   </div>
-                  <CardTitle className="text-center text-gray-700">新增公司</CardTitle>
+                  <CardTitle className="text-center text-gray-700">新增專案</CardTitle>
                   <CardDescription className="text-center text-sm mt-1">
                     添加新的測試頁面
                   </CardDescription>
@@ -131,109 +131,6 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* API Endpoints */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Satellite className="w-6 h-6 text-gray-700" />
-            <h2 className="text-2xl font-bold text-gray-900">API 端點</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-white border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">聊天 API</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <code className="text-sm bg-gray-100 px-3 py-2 rounded block font-mono">
-                  POST /api/&#123;company&#125;/chat
-                </code>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">FAQ 菜單</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <code className="text-sm bg-gray-100 px-3 py-2 rounded block font-mono">
-                  GET /api/&#123;company&#125;/faq-menu
-                </code>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">Widget 加載器</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <code className="text-sm bg-gray-100 px-3 py-2 rounded block font-mono">
-                  GET /widget/loader.js
-                </code>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">Widget 主文件</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <code className="text-sm bg-gray-100 px-3 py-2 rounded block font-mono">
-                  GET /widget/widget.js
-                </code>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">Widget 樣式</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <code className="text-sm bg-gray-100 px-3 py-2 rounded block font-mono">
-                  GET /widget/widget.css
-                </code>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">知識庫</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <code className="text-sm bg-gray-100 px-3 py-2 rounded block font-mono">
-                  GET /knowledge/&#123;company&#125;/*.json
-                </code>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Zap className="w-6 h-6 text-gray-700" />
-            <h2 className="text-2xl font-bold text-gray-900">快速操作</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-24 flex-col gap-2 bg-white border-gray-200 hover:bg-gray-50" asChild>
-              <Link href="https://dash.cloudflare.com" target="_blank">
-                <Settings className="w-5 h-5" />
-                <span className="text-sm">Cloudflare<br />Dashboard</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-24 flex-col gap-2 bg-white border-gray-200 hover:bg-gray-50" asChild>
-              <Link href="/projects">
-                <Building2 className="w-5 h-5" />
-                <span className="text-sm">公司<br />配置</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-24 flex-col gap-2 bg-white border-gray-200 hover:bg-gray-50" asChild>
-              <Link href="/demo/goldenyears">
-                <TestTube className="w-5 h-5" />
-                <span className="text-sm">測試<br />頁面</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-24 flex-col gap-2 bg-white border-gray-200 hover:bg-gray-50" asChild>
-              <Link href="/docs">
-                <FileText className="w-5 h-5" />
-                <span className="text-sm">文檔<br />說明</span>
-              </Link>
-            </Button>
-          </div>
-        </div>
 
         {/* Deployment Success Message */}
         <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm">
@@ -245,7 +142,7 @@ export default async function HomePage() {
               <div>
                 <h3 className="font-bold text-green-900 mb-2">部署成功</h3>
                 <p className="text-green-800 text-sm leading-relaxed">
-                  多租戶 Chatbot Service 已成功部署到 Cloudflare Pages。此服務為多個公司提供 AI 聊天機器人功能,支持獨立的知識庫和配置管理。
+                  多租戶 Chatbot Service 已成功部署到 Cloudflare Pages。此服務為多個專案提供 AI 聊天機器人功能,支持獨立的知識庫和配置管理。
                 </p>
               </div>
             </div>

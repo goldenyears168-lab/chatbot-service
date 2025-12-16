@@ -38,11 +38,11 @@
       "active": true,
       "deployment": "shared"
     },
-    "internal-advisor": {
-      "id": "internal-advisor",
-      "name": "内部解惑顾问",
-      "name_en": "Internal Advisor",
-      "path": "internal-advisor",
+    "bonus-advisor": {
+      "id": "bonus-advisor",
+      "name": "年終獎金顧問",
+      "name_en": "Bonus Advisor",
+      "path": "bonus-advisor",
       "group": null,
       "active": true,
       "deployment": "shared"

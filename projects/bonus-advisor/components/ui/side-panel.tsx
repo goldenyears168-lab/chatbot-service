@@ -24,11 +24,11 @@ export function SidePanel({ open, onOpenChange, children, className }: SidePanel
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientX)
+    const touch = e.targetTouches[0]; if (touch) setTouchStart(touch.clientX)
   }
 
   const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX)
+    const touch = e.targetTouches[0]; if (touch) setTouchEnd(touch.clientX)
   }
 
   const onTouchEnd = () => {

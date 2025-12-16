@@ -6,7 +6,7 @@ import { join } from 'path'
 export const runtime = 'nodejs'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ company: string }> | { company: string } }
 ) {
   try {

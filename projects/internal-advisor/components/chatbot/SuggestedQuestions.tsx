@@ -4,7 +4,7 @@
 'use client'
 
 import { memo } from 'react'
-import { Button } from '../ui/button'
+import { Button } from '@/components/ui/button'
 
 interface SuggestedQuestionsProps {
   questions: string[]

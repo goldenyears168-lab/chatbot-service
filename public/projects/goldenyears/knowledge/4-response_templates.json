@@ -1,16 +1,16 @@
 {
-  "_file_description": "回复模板文件：定义针对不同意图的回复模板，包括主要回答、补充信息和下一步行动建议。这些模板会被 AI 直接使用或作为参考生成回复。",
+  "_file_description": "回覆模板檔案：定義針對不同意圖的回覆模板，包括主要回答、補充資訊和下一步行動建議。這些模板會被 AI 直接使用或作為參考產生回覆。",
   "version": "1.0.0",
   "last_updated": "2025-01-15",
   "data_source": "knowledge/response_templates.json (單一事實來源)",
-  "_section_templates": "回复模板：每个模板对应一个意图 ID（与 3-ai_config.json 中的意图 ID 对应）",
+  "_section_templates": "回覆模板：每個模板對應一個意圖 ID（與 3-ai_config.json 中的意圖 ID 對應）",
   "templates": {
     "price_inquiry": {
-      "_comment": "价格查询模板：当用户询问价格时使用",
+      "_comment": "價格查詢模板：當用戶詢問價格時使用",
       "_field_description": {
-        "main_answer": "主要回答：直接回答用户的问题",
-        "supplementary_info": "补充信息：提供额外的有用信息",
-        "next_best_actions": "下一步行动建议：显示为快速回复按钮，帮助用户继续对话"
+        "main_answer": "主要回答：直接回答用戶的問題",
+        "supplementary_info": "補充資訊：提供額外的有用資訊",
+        "next_best_actions": "下一步行動建議：顯示為快速回覆按鈕，幫助用戶繼續對話"
       },
       "main_answer": "我們的服務按張計費，價格範圍如下：\n\n- **韓式證件照**：約 NT$399 / 張（低消 1 張）\n- **專業形象照**：約 NT$999 / 張（低消 1 張）\n- **個人寫真／畢業寫真**：約 NT$999–1,199 / 張\n- **多人合照／全家福**：約 NT$1,199 / 張（低消 1 張／每組合，2-6人）。若超過6人，第7人以上每人加收 NT$200\n- **一日攝影師工作坊**：約 NT$6,000 / 5–6 人（包場）\n\n實際金額以現場與當季公告為準。",
       "supplementary_info": "所有服務都包含精修，每張照片都會經過自然、精緻的修圖處理。如果需要急件服務（最快隔天 18:00 前交付），需在預約時或現場提出並加收急件費用。",
