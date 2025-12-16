@@ -74,8 +74,8 @@ async function loadKnowledgeDataViaApi(company: string, baseUrl: string): Promis
   return response.json()
 }
 
-// 使用 Edge Runtime（支持 Vercel 和 Cloudflare Pages）
-export const runtime = 'edge'
+// 使用 Node.js Runtime（Vercel 免费计划 Edge Function 有 1MB 限制，Node.js Runtime 没有这个限制）
+export const runtime = 'nodejs'
 
 export default async function KnowledgePage({ params }: KnowledgePageProps) {
   let company: string
