@@ -61,10 +61,17 @@ export async function GET(
     const aiConfig = knowledgeBase.aiConfig || knowledgeBase.ai_config || {}
     const responseTemplates = knowledgeBase.responseTemplates || knowledgeBase.response_templates || {}
     
+    const aiConfigObj = typeof aiConfig === 'object' && aiConfig !== null ? aiConfig as Record<string, unknown> : {}
+    const responseTemplatesObj = typeof responseTemplates === 'object' && responseTemplates !== null ? responseTemplates as Record<string, unknown> : {}
+    
     return NextResponse.json(
       {
-        ui: aiConfig.ui || { removeMarkdownBold: true },
-        responseTemplates: responseTemplates.templates || {},
+        ui: (aiConfigObj.ui && typeof aiConfigObj.ui === 'object' && aiConfigObj.ui !== null) 
+          ? aiConfigObj.ui 
+          : { removeMarkdownBold: true },
+        responseTemplates: (responseTemplatesObj.templates && typeof responseTemplatesObj.templates === 'object' && responseTemplatesObj.templates !== null)
+          ? responseTemplatesObj.templates
+          : {},
       },
       { headers: corsHeaders }
     )

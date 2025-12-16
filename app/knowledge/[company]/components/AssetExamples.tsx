@@ -44,15 +44,18 @@ function getWhyItMatters(assetKey: string): string {
 function getExamples(assetKey: string, data: unknown): Example[] {
   const examples: Example[] = []
   
-  if (!data) return examples
+  if (!data || typeof data !== 'object' || data === null) return examples
+  
+  const dataObj = data as Record<string, unknown>
   
   switch (assetKey) {
     case 'services':
-      if (data.services) {
-        const services = Array.isArray(data.services) ? data.services : Object.values(data.services)
+      if (dataObj.services) {
+        const services = Array.isArray(dataObj.services) ? dataObj.services : Object.values(dataObj.services)
         services.slice(0, 3).forEach((s: unknown, i: number) => {
+          const serviceObj = typeof s === 'object' && s !== null ? s as Record<string, unknown> : {}
           examples.push({
-            title: `服務範例 ${i + 1}: ${s.name || `服務 ${i + 1}`}`,
+            title: `服務範例 ${i + 1}: ${String(serviceObj.name || `服務 ${i + 1}`)}`,
             content: s,
             path: `services[${i}]`,
             whyItMatters: getWhyItMatters(assetKey)
@@ -62,13 +65,15 @@ function getExamples(assetKey: string, data: unknown): Example[] {
       break
       
     case 'company_info':
-      if (data.branches) {
-        const branches = Array.isArray(data.branches) ? data.branches : Object.values(data.branches)
+      if (dataObj.branches) {
+        const branches = Array.isArray(dataObj.branches) ? dataObj.branches : Object.values(dataObj.branches)
         branches.slice(0, 3).forEach((b: unknown, i: number) => {
+          const branchObj = typeof b === 'object' && b !== null ? b as Record<string, unknown> : {}
+          const branchesObj = dataObj.branches as Record<string, unknown> | unknown[]
           examples.push({
-            title: `分店範例 ${i + 1}: ${b.name || `分店 ${i + 1}`}`,
+            title: `分店範例 ${i + 1}: ${String(branchObj.name || `分店 ${i + 1}`)}`,
             content: b,
-            path: Array.isArray(data.branches) ? `branches[${i}]` : `branches.${Object.keys(data.branches)[i]}`,
+            path: Array.isArray(branchesObj) ? `branches[${i}]` : `branches.${Object.keys(branchesObj as Record<string, unknown>)[i]}`,
             whyItMatters: getWhyItMatters(assetKey)
           })
         })
@@ -76,15 +81,20 @@ function getExamples(assetKey: string, data: unknown): Example[] {
       break
       
     case 'faq_detailed':
-      if (data.categories) {
-        const categories = Object.keys(data.categories)
+      if (dataObj.categories && typeof dataObj.categories === 'object' && dataObj.categories !== null) {
+        const categoriesObj = dataObj.categories as Record<string, unknown>
+        const categories = Object.keys(categoriesObj)
         const firstCategoryKey = categories[0]
         if (firstCategoryKey) {
-          const firstCategory = data.categories[firstCategoryKey]
-          if (firstCategory?.questions) {
-            firstCategory.questions.slice(0, 3).forEach((q: unknown, i: number) => {
+          const firstCategory = categoriesObj[firstCategoryKey]
+          if (firstCategory && typeof firstCategory === 'object' && firstCategory !== null) {
+            const categoryObj = firstCategory as Record<string, unknown>
+            const questions = Array.isArray(categoryObj.questions) ? categoryObj.questions : []
+            questions.slice(0, 3).forEach((q: unknown, i: number) => {
+              const qObj = typeof q === 'object' && q !== null ? q as Record<string, unknown> : {}
+              const question = String(qObj.question || '')
               examples.push({
-                title: `FAQ 範例 ${i + 1}: ${q.question?.substring(0, 40)}${q.question?.length > 40 ? '...' : ''}`,
+                title: `FAQ 範例 ${i + 1}: ${question.substring(0, 40)}${question.length > 40 ? '...' : ''}`,
                 content: q,
                 path: `categories.${firstCategoryKey}.questions[${i}]`,
                 whyItMatters: getWhyItMatters(assetKey)

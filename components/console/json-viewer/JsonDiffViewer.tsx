@@ -11,18 +11,18 @@ import { cn } from '@/lib/utils'
 interface DiffChange {
   path: string
   type: 'added' | 'removed' | 'changed'
-  before?: any
-  after?: any
+  before?: unknown
+  after?: unknown
 }
 
 interface JsonDiffViewerProps {
-  prev: any
-  next: any
+  prev: unknown
+  next: unknown
   className?: string
 }
 
 // Simple diff algorithm for JSON objects
-function computeDiff(prev: any, next: any, path = ''): DiffChange[] {
+function computeDiff(prev: unknown, next: unknown, path = ''): DiffChange[] {
   const changes: DiffChange[] = []
 
   // Handle null/undefined
@@ -55,17 +55,19 @@ function computeDiff(prev: any, next: any, path = ''): DiffChange[] {
   }
 
   // Handle objects
-  const allKeys = new Set([...Object.keys(prev), ...Object.keys(next)])
+  const prevObj = prev as Record<string, unknown>
+  const nextObj = next as Record<string, unknown>
+  const allKeys = new Set([...Object.keys(prevObj), ...Object.keys(nextObj)])
 
   for (const key of allKeys) {
     const currentPath = path ? `${path}.${key}` : key
-    const prevValue = prev[key]
-    const nextValue = next[key]
+    const prevValue = prevObj[key]
+    const nextValue = nextObj[key]
 
-    if (!(key in prev)) {
+    if (!(key in prevObj)) {
       // Added
       changes.push({ path: currentPath, type: 'added', after: nextValue })
-    } else if (!(key in next)) {
+    } else if (!(key in nextObj)) {
       // Removed
       changes.push({ path: currentPath, type: 'removed', before: prevValue })
     } else {
@@ -78,7 +80,7 @@ function computeDiff(prev: any, next: any, path = ''): DiffChange[] {
 }
 
 // Format value for display
-function formatValue(value: any): string {
+function formatValue(value: unknown): string {
   if (value === null) return 'null'
   if (value === undefined) return 'undefined'
   if (typeof value === 'string') {

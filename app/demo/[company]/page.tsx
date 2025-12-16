@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import * as React from 'react'
 import { DynamicChatbotWidget } from './DynamicChatbotWidget'
 import { getCompanyConfig } from '@/lib/config'
 import { getKnowledgeBase } from '@/lib/knowledge'
@@ -64,12 +65,17 @@ export default async function DemoPage({
   const servicesData = knowledgeBase.services || {}
   const companyInfo = knowledgeBase.company_info || {}
   
+  const servicesDataObj = typeof servicesData === 'object' && servicesData !== null ? servicesData as Record<string, unknown> : {}
+  const servicesValue = servicesDataObj.services
+  
   // 服务列表（可能是数组或对象）
-  const servicesList: Service[] = Array.isArray(servicesData.services)
-    ? servicesData.services.filter(isService)
-    : servicesData.services && typeof servicesData.services === 'object'
-      ? Object.values(servicesData.services).filter(isService)
+  const servicesList: Service[] = Array.isArray(servicesValue)
+    ? servicesValue.filter(isService)
+    : servicesValue && typeof servicesValue === 'object' && servicesValue !== null
+      ? Object.values(servicesValue).filter(isService)
       : []
+  
+  const companyInfoObj = typeof companyInfo === 'object' && companyInfo !== null ? companyInfo as Record<string, unknown> : {}
 
   return (
     <div className="container mx-auto p-8 min-h-screen bg-background">
@@ -114,68 +120,93 @@ export default async function DemoPage({
             <CardTitle>联系方式</CardTitle>
           </CardHeader>
           <CardContent>
-            {companyInfo.branches && Array.isArray(companyInfo.branches) && companyInfo.branches.length > 0 ? (
-              <div className="space-y-4">
-                {companyInfo.branches.filter(isBranch).map((branch: Branch) => (
-                  <div key={branch.id} className="border-b pb-3 last:border-0">
-                    <h3 className="font-semibold text-foreground mb-2">{branch.name}</h3>
-                    {branch.address && (
-                      <p className="text-sm text-foreground mb-1">
-                        <span className="font-medium">地址:</span> {branch.address}
-                      </p>
-                    )}
-                    {branch.address_note && (
-                      <p className="text-xs text-muted-foreground mb-1">{branch.address_note}</p>
-                    )}
-                    {branch.phone && (
-                      <p className="text-sm text-foreground">
-                        <span className="font-medium">电话:</span> {branch.phone}
-                      </p>
-                    )}
-                    {branch.hours && branch.hours.weekday && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        营业时间: {branch.hours.weekday}
-                      </p>
+            {(() => {
+              const branches = companyInfoObj.branches
+              const contactChannels = companyInfoObj.contact_channels
+              
+              if (branches && Array.isArray(branches) && branches.length > 0) {
+                return (
+                  <div className="space-y-4">
+                    {(branches as unknown[]).filter(isBranch).map((branch: Branch) => (
+                      <div key={branch.id} className="border-b pb-3 last:border-0">
+                        <h3 className="font-semibold text-foreground mb-2">{branch.name}</h3>
+                        {branch.address && (
+                          <p className="text-sm text-foreground mb-1">
+                            <span className="font-medium">地址:</span> {branch.address}
+                          </p>
+                        )}
+                        {branch.address_note && (
+                          <p className="text-xs text-muted-foreground mb-1">{branch.address_note}</p>
+                        )}
+                        {branch.phone && (
+                          <p className="text-sm text-foreground">
+                            <span className="font-medium">电话:</span> {branch.phone}
+                          </p>
+                        )}
+                        {branch.hours && branch.hours.weekday && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            营业时间: {branch.hours.weekday}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                    {contactChannels && typeof contactChannels === 'object' && contactChannels !== null && (
+                      <div className="mt-4 pt-4 border-t">
+                        {(() => {
+                          const channels = contactChannels as Record<string, unknown>
+                          const elements: React.ReactNode[] = []
+                          if (channels.email && typeof channels.email === 'string') {
+                            elements.push(
+                              <p key="email" className="text-sm text-foreground mb-1">
+                                <span className="font-medium">邮箱:</span>{' '}
+                                <a href={`mailto:${channels.email}`} className="text-primary hover:underline">
+                                  {channels.email}
+                                </a>
+                              </p>
+                            )
+                          }
+                          if (channels.ig && typeof channels.ig === 'string') {
+                            elements.push(
+                              <p key="ig" className="text-sm text-foreground">
+                                <span className="font-medium">Instagram:</span> {channels.ig}
+                              </p>
+                            )
+                          }
+                          return elements
+                        })()}
+                      </div>
                     )}
                   </div>
-                ))}
-                {companyInfo.contact_channels && (
-                  <div className="mt-4 pt-4 border-t">
-                    {companyInfo.contact_channels.email && (
-                      <p className="text-sm text-foreground mb-1">
-                        <span className="font-medium">邮箱:</span>{' '}
-                        <a href={`mailto:${companyInfo.contact_channels.email}`} className="text-primary hover:underline">
-                          {companyInfo.contact_channels.email}
-                        </a>
-                      </p>
-                    )}
-                    {companyInfo.contact_channels.ig && (
-                      <p className="text-sm text-foreground">
-                        <span className="font-medium">Instagram:</span> {companyInfo.contact_channels.ig}
-                      </p>
-                    )}
+                )
+              } else if (contactChannels && typeof contactChannels === 'object' && contactChannels !== null) {
+                const channels = contactChannels as Record<string, unknown>
+                const elements: React.ReactNode[] = []
+                if (channels.email && typeof channels.email === 'string') {
+                  elements.push(
+                    <p key="email" className="text-foreground">
+                      <span className="font-semibold">邮箱:</span>{' '}
+                      <a href={`mailto:${channels.email}`} className="text-primary hover:underline">
+                        {channels.email}
+                      </a>
+                    </p>
+                  )
+                }
+                if (channels.phone && typeof channels.phone === 'string') {
+                  elements.push(
+                    <p key="phone" className="text-foreground">
+                      <span className="font-semibold">电话:</span> {channels.phone}
+                    </p>
+                  )
+                }
+                return (
+                  <div className="space-y-2 text-sm">
+                    {elements}
                   </div>
-                )}
-              </div>
-            ) : companyInfo.contact_channels ? (
-              <div className="space-y-2 text-sm">
-                {companyInfo.contact_channels.email && (
-                  <p className="text-foreground">
-                    <span className="font-semibold">邮箱:</span>{' '}
-                    <a href={`mailto:${companyInfo.contact_channels.email}`} className="text-primary hover:underline">
-                      {companyInfo.contact_channels.email}
-                    </a>
-                  </p>
-                )}
-                {companyInfo.contact_channels.phone && (
-                  <p className="text-foreground">
-                    <span className="font-semibold">电话:</span> {companyInfo.contact_channels.phone}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">暂无联系方式</p>
-            )}
+                )
+              } else {
+                return <p className="text-muted-foreground">暂无联系方式</p>
+              }
+            })()}
           </CardContent>
         </Card>
       </div>

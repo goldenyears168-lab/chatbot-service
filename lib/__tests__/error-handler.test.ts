@@ -13,7 +13,7 @@ import {
 const mockLoggerError = jest.fn()
 jest.mock('../logger', () => ({
   logger: {
-    error: (...args: any[]) => mockLoggerError(...args),
+    error: (...args: unknown[]) => mockLoggerError(...args),
   },
 }))
 
@@ -78,11 +78,19 @@ describe('formatErrorResponse', () => {
   const originalEnv = process.env.NODE_ENV
 
   afterEach(() => {
-    ;(process.env as any).NODE_ENV = originalEnv
+    Object.defineProperty(process, 'env', {
+      value: { ...process.env, NODE_ENV: originalEnv },
+      writable: true,
+      configurable: true,
+    })
   })
 
   it('should format AppError in development', () => {
-    ;(process.env as any).NODE_ENV = 'development'
+    Object.defineProperty(process, 'env', {
+      value: { ...process.env, NODE_ENV: 'development' },
+      writable: true,
+      configurable: true,
+    })
     const error = new ValidationError('Invalid input', { field: 'email' })
     const response = formatErrorResponse(error)
     
@@ -92,7 +100,11 @@ describe('formatErrorResponse', () => {
   })
 
   it('should format AppError in production', () => {
-    ;(process.env as any).NODE_ENV = 'production'
+    Object.defineProperty(process, 'env', {
+      value: { ...process.env, NODE_ENV: 'production' },
+      writable: true,
+      configurable: true,
+    })
     const error = new ValidationError('Invalid input', { field: 'email' })
     const response = formatErrorResponse(error)
     
@@ -103,7 +115,11 @@ describe('formatErrorResponse', () => {
   })
 
   it('should format generic Error in development', () => {
-    ;(process.env as any).NODE_ENV = 'development'
+    Object.defineProperty(process, 'env', {
+      value: { ...process.env, NODE_ENV: 'development' },
+      writable: true,
+      configurable: true,
+    })
     const error = new Error('Something went wrong')
     const response = formatErrorResponse(error)
     
@@ -112,7 +128,11 @@ describe('formatErrorResponse', () => {
   })
 
   it('should format generic Error in production', () => {
-    ;(process.env as any).NODE_ENV = 'production'
+    Object.defineProperty(process, 'env', {
+      value: { ...process.env, NODE_ENV: 'production' },
+      writable: true,
+      configurable: true,
+    })
     const error = new Error('Something went wrong')
     const response = formatErrorResponse(error)
     

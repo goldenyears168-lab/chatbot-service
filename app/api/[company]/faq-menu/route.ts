@@ -79,7 +79,7 @@ export async function GET(
     // 尝试多种可能的 FAQ 数据键名
     const faqData = knowledgeBase.faq_detailed || knowledgeBase.faq || knowledgeBase.faqMenu || null
     
-    if (faqData && faqData.categories) {
+    if (faqData && typeof faqData === 'object' && faqData !== null && 'categories' in faqData) {
       return NextResponse.json(faqData, { headers: corsHeaders })
     }
     

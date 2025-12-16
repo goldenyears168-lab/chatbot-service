@@ -203,15 +203,15 @@ describe('validateChatRequest', () => {
   })
 
   it('should reject invalid request body', () => {
-    expect(() => validateChatRequest(null as any)).toThrow(ValidationError)
-    expect(() => validateChatRequest(undefined as any)).toThrow(ValidationError)
-    expect(() => validateChatRequest('string' as any)).toThrow(ValidationError)
-    expect(() => validateChatRequest(123 as any)).toThrow(ValidationError)
+    expect(() => validateChatRequest(null as unknown as { message: string })).toThrow(ValidationError)
+    expect(() => validateChatRequest(undefined as unknown as { message: string })).toThrow(ValidationError)
+    expect(() => validateChatRequest('string' as unknown as { message: string })).toThrow(ValidationError)
+    expect(() => validateChatRequest(123 as unknown as { message: string })).toThrow(ValidationError)
   })
 
   it('should reject requests without message', () => {
-    expect(() => validateChatRequest({} as any)).toThrow(ValidationError)
-    expect(() => validateChatRequest({ sessionId: 'session_123' } as any)).toThrow(ValidationError)
+    expect(() => validateChatRequest({} as unknown as { message: string })).toThrow(ValidationError)
+    expect(() => validateChatRequest({ sessionId: 'session_123' } as unknown as { message: string })).toThrow(ValidationError)
   })
 
   it('should validate message content', () => {
