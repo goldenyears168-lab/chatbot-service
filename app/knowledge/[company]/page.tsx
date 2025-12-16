@@ -4,7 +4,6 @@ import { ErrorDisplay } from './ErrorDisplay'
 import { EmptyState } from './EmptyState'
 import { ClientConsole } from './components/ClientConsole'
 import { WidgetCodeDisplay } from './WidgetCodeDisplay'
-import { loadKnowledgeData } from '@/lib/knowledge/loader'
 import { headers } from 'next/headers'
 import type { CompanyConfig } from '@/lib/config'
 
@@ -12,96 +11,134 @@ interface KnowledgePageProps {
   params: Promise<{ company: string }> | { company: string }
 }
 
-async function getBaseUrl(): Promise<string> {
-  // 优先使用环境变量
+/**
+ * 获取 baseUrl - 优先使用环境变量，否则尝试从 headers 获取
+ * 注意：在 Edge Runtime 页面组件中，headers() 可能不可靠
+ */
+async function getBaseUrlForApi(): Promise<string> {
+  // 优先使用环境变量（最可靠）
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     return process.env.NEXT_PUBLIC_BASE_URL
   }
   
-  // 在 Edge Runtime 中，尝试从请求头中获取 baseUrl
-  try {
-    const headersList = await headers()
-    const host = headersList.get('host') || 
-                  headersList.get('x-forwarded-host') ||
-                  headersList.get('cf-connecting-ip') // Cloudflare specific
-    
-    if (host) {
-      // 移除端口号（如果有）
-      const hostWithoutPort = host.split(':')[0]
-      const protocol = headersList.get('x-forwarded-proto') || 
-                       (headersList.get('x-forwarded-ssl') === 'on' ? 'https' : 'https') ||
-                       'https'
-      return `${protocol}://${hostWithoutPort}`
-    }
-  } catch (error) {
-    // 如果无法获取 headers，记录错误但继续
-    console.warn('Failed to get baseUrl from headers:', error)
-  }
-  
-  // 开发环境默认值
+  // 开发环境
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:3000'
   }
   
-  // 生产环境：尝试使用当前请求的 URL（如果可用）
-  // 注意：在 Edge Runtime 的页面组件中，我们无法直接访问 request
-  // 所以这里返回一个占位符，loadKnowledgeData 会处理错误
+  // 生产环境：尝试从 headers 获取（可能不可靠）
+  try {
+    const headersList = await headers()
+    const host = headersList.get('x-forwarded-host') || headersList.get('host')
+    if (host) {
+      const hostWithoutPort = host.split(':')[0]
+      const protocol = headersList.get('x-forwarded-proto') || 'https'
+      return `${protocol}://${hostWithoutPort}`
+    }
+  } catch {
+    // headers() 可能失败，这是正常的
+  }
   
-  // 如果所有方法都失败，返回空字符串，让调用方处理
-  console.error('Warning: Unable to determine baseUrl. Some features may not work correctly.')
+  // 如果都失败，返回空字符串，让 API route 处理
   return ''
+}
+
+/**
+ * 通过 API route 加载知识库数据
+ * 在 Edge Runtime 中，fetch 需要完整的 URL，所以必须提供 baseUrl
+ */
+async function loadKnowledgeDataViaApi(company: string, baseUrl: string): Promise<any> {
+  if (!baseUrl) {
+    throw new Error(
+      'Base URL is required. Please set NEXT_PUBLIC_BASE_URL environment variable ' +
+      'in Cloudflare Pages Settings → Environment variables → Production/Preview.'
+    )
+  }
+  
+  const apiUrl = `${baseUrl}/api/knowledge/${company}`
+  const response = await fetch(apiUrl, {
+    cache: 'no-store',
+    headers: {
+      'Accept': 'application/json',
+    }
+  })
+  
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '')
+    throw new Error(
+      `Failed to load knowledge data: ${response.status} ${response.statusText}` +
+      (errorText ? ` - ${errorText}` : '')
+    )
+  }
+  
+  return response.json()
 }
 
 // 使用 Edge Runtime（Cloudflare Pages 要求）
 export const runtime = 'edge'
 
 export default async function KnowledgePage({ params }: KnowledgePageProps) {
-  const { company } = await Promise.resolve(params)
-  
-  // 获取 baseUrl（用于加载知识库数据）
-  const baseUrl = await getBaseUrl()
-  
-  // 获取用于显示的 baseUrl（可选）
-  const displayBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : baseUrl)
-  
-  let knowledgeData: Awaited<ReturnType<typeof loadKnowledgeData>> | null = null
+  let company: string
+  let baseUrl: string = ''
+  let displayBaseUrl: string = ''
+  let knowledgeData: any = null
   let companyConfig: CompanyConfig | null = null
   let error: string | null = null
   
   try {
-    // 检查 baseUrl 是否有效
-    if (!baseUrl) {
-      throw new Error(
-        'Base URL is not available. Please set NEXT_PUBLIC_BASE_URL environment variable ' +
-        'in Cloudflare Pages Settings → Environment variables.'
-      )
+    // 解析 params
+    company = (await Promise.resolve(params)).company
+    
+    // 获取 baseUrl（用于调用 API route）
+    try {
+      baseUrl = await getBaseUrlForApi()
+    } catch (urlError) {
+      error = `Failed to get base URL: ${urlError instanceof Error ? urlError.message : String(urlError)}`
     }
     
-    // 直接使用共享的加载函数，而不是通过 HTTP fetch
-    [knowledgeData, companyConfig] = await Promise.all([
-      loadKnowledgeData(company, baseUrl),
-      getCompanyConfig(company)
-    ])
+    // 获取用于显示的 baseUrl
+    displayBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+      (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : baseUrl)
     
-    // 資料驗證
-    if (knowledgeData && (!knowledgeData.files || !Array.isArray(knowledgeData.files))) {
-      throw new Error('知識庫資料格式錯誤：缺少檔案列表')
-    }
-    
-    // 驗證檔案資料完整性
-    if (knowledgeData?.files) {
-      knowledgeData.files = knowledgeData.files.filter((file) => 
-        file && 
-        file.filename && 
-        file.key && 
-        file.data !== undefined &&
-        file.size !== undefined &&
-        file.lastModified
-      )
+    // 尝试加载数据
+    // API route 可以从 request.url 获取可靠的 baseUrl
+    if (!error && baseUrl) {
+      try {
+        // 通过 API route 加载数据
+        [knowledgeData, companyConfig] = await Promise.all([
+          loadKnowledgeDataViaApi(company, baseUrl),
+          getCompanyConfig(company)
+        ])
+        
+        // 資料驗證
+        if (knowledgeData && (!knowledgeData.files || !Array.isArray(knowledgeData.files))) {
+          throw new Error('知識庫資料格式錯誤：缺少檔案列表')
+        }
+        
+        // 驗證檔案資料完整性
+        if (knowledgeData?.files) {
+          knowledgeData.files = knowledgeData.files.filter((file: any) => 
+            file && 
+            file.filename && 
+            file.key && 
+            file.data !== undefined &&
+            file.size !== undefined &&
+            file.lastModified
+          )
+        }
+      } catch (dataError) {
+        error = dataError instanceof Error ? dataError.message : String(dataError)
+      }
     }
   } catch (err) {
+    // 捕获所有其他可能的错误
     error = err instanceof Error ? err.message : String(err)
+    // 确保 company 有值，即使出错
+    try {
+      company = (await Promise.resolve(params)).company
+    } catch {
+      company = 'unknown'
+    }
   }
 
   return (
