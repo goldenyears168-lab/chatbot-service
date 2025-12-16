@@ -6,17 +6,17 @@ import { getCachedKnowledgeBase, setCachedKnowledgeBase } from './knowledge-cach
 
 export interface KnowledgeBase {
   companyId: string
-  services?: any
-  contactInfo?: any
-  company_info?: any
-  aiConfig?: any
-  ai_config?: any
-  personas?: any
-  responseTemplates?: any
-  response_templates?: any
-  faq?: any
-  faq_detailed?: any
-  [key: string]: any
+  services?: unknown
+  contactInfo?: unknown
+  company_info?: unknown
+  aiConfig?: unknown
+  ai_config?: unknown
+  personas?: unknown
+  responseTemplates?: unknown
+  response_templates?: unknown
+  faq?: unknown
+  faq_detailed?: unknown
+  [key: string]: unknown
 }
 
 /**

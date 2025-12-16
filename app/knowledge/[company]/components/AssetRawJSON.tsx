@@ -15,7 +15,7 @@ interface AssetRawJSONProps {
 }
 
 // Helper to find line numbers for a given path
-function findPathInJSON(data: any, path: string, jsonString: string): number[] {
+function findPathInJSON(data: unknown, path: string, jsonString: string): number[] {
   if (!path || !data) return []
   
   try {

@@ -10,12 +10,12 @@ import { useToast } from '@/components/ui/use-toast'
 
 interface AssetExamplesProps {
   assetKey: string
-  assetData: any
+  assetData: unknown
 }
 
 interface Example {
   title: string
-  content: any
+  content: unknown
   path: string
   whyItMatters: string
 }
@@ -41,7 +41,7 @@ function getWhyItMatters(assetKey: string): string {
 }
 
 
-function getExamples(assetKey: string, data: any): Example[] {
+function getExamples(assetKey: string, data: unknown): Example[] {
   const examples: Example[] = []
   
   if (!data) return examples
@@ -50,7 +50,7 @@ function getExamples(assetKey: string, data: any): Example[] {
     case 'services':
       if (data.services) {
         const services = Array.isArray(data.services) ? data.services : Object.values(data.services)
-        services.slice(0, 3).forEach((s: any, i: number) => {
+        services.slice(0, 3).forEach((s: unknown, i: number) => {
           examples.push({
             title: `服務範例 ${i + 1}: ${s.name || `服務 ${i + 1}`}`,
             content: s,
@@ -64,7 +64,7 @@ function getExamples(assetKey: string, data: any): Example[] {
     case 'company_info':
       if (data.branches) {
         const branches = Array.isArray(data.branches) ? data.branches : Object.values(data.branches)
-        branches.slice(0, 3).forEach((b: any, i: number) => {
+        branches.slice(0, 3).forEach((b: unknown, i: number) => {
           examples.push({
             title: `分店範例 ${i + 1}: ${b.name || `分店 ${i + 1}`}`,
             content: b,
@@ -82,7 +82,7 @@ function getExamples(assetKey: string, data: any): Example[] {
         if (firstCategoryKey) {
           const firstCategory = data.categories[firstCategoryKey]
           if (firstCategory?.questions) {
-            firstCategory.questions.slice(0, 3).forEach((q: any, i: number) => {
+            firstCategory.questions.slice(0, 3).forEach((q: unknown, i: number) => {
               examples.push({
                 title: `FAQ 範例 ${i + 1}: ${q.question?.substring(0, 40)}${q.question?.length > 40 ? '...' : ''}`,
                 content: q,
@@ -98,7 +98,7 @@ function getExamples(assetKey: string, data: any): Example[] {
     case 'ai_config':
       if (data.intents) {
         const intents = Array.isArray(data.intents) ? data.intents : Object.values(data.intents)
-        intents.slice(0, 3).forEach((intent: any, i: number) => {
+        intents.slice(0, 3).forEach((intent: unknown, i: number) => {
           examples.push({
             title: `意圖範例 ${i + 1}: ${intent.id || `意圖 ${i + 1}`}`,
             content: intent,
@@ -112,7 +112,7 @@ function getExamples(assetKey: string, data: any): Example[] {
     case 'response_templates':
       if (data.templates) {
         const templates = Array.isArray(data.templates) ? data.templates : Object.entries(data.templates)
-        templates.slice(0, 3).forEach((template: any, i: number) => {
+        templates.slice(0, 3).forEach((template: unknown, i: number) => {
           const [key, value] = Array.isArray(template) ? template : [i, template]
           examples.push({
             title: `範本範例 ${i + 1}: ${key}`,
@@ -127,7 +127,7 @@ function getExamples(assetKey: string, data: any): Example[] {
     case 'personas':
       if (data.personas) {
         const personas = Array.isArray(data.personas) ? data.personas : Object.values(data.personas)
-        personas.slice(0, 3).forEach((persona: any, i: number) => {
+        personas.slice(0, 3).forEach((persona: unknown, i: number) => {
           examples.push({
             title: `角色範例 ${i + 1}: ${persona.id || persona.name || `角色 ${i + 1}`}`,
             content: persona,
@@ -151,7 +151,7 @@ export function AssetExamples({ assetKey, assetData }: AssetExamplesProps) {
     return <EmptyState message="暫無範例資料" icon="file" />
   }
   
-  const handleCopySnippet = async (content: any, index: number) => {
+  const handleCopySnippet = async (content: unknown, index: number) => {
     try {
       await navigator.clipboard.writeText(JSON.stringify(content, null, 2))
       setCopiedIndex(index)

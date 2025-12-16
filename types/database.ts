@@ -10,7 +10,7 @@ export interface ConversationRecord {
   end_time?: Date | string
   message_count: number
   status: 'active' | 'completed' | 'abandoned'
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -22,10 +22,10 @@ export interface MessageRecord {
   content: string
   timestamp: Date | string
   intent?: string
-  entities?: Record<string, any>
+  entities?: Record<string, unknown>
   response_time?: number
   embedding?: number[] // vector(768)
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   created_at?: Date | string
 }
 
@@ -37,8 +37,8 @@ export interface UserRecord {
   last_seen: Date | string
   conversation_count: number
   message_count: number
-  preferences?: Record<string, any>
-  metadata?: Record<string, any>
+  preferences?: Record<string, unknown>
+  metadata?: Record<string, unknown>
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -49,7 +49,7 @@ export interface PerformanceMetric {
   workflow_id: string
   timestamp: Date | string
   execution_time: number
-  node_metrics: Record<string, any>
+  node_metrics: Record<string, unknown>
   memory_usage?: number
   cpu_usage?: number
   created_at?: Date | string
@@ -67,7 +67,7 @@ export interface WorkflowExecution {
   nodes_failed: number
   total_execution_time?: number
   error_message?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   created_at?: Date | string
 }
 

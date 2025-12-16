@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/use-toast'
 
 interface AssetSchemaProps {
   assetKey: string
-  assetData: any
+  assetData: unknown
 }
 
 interface SchemaField {
@@ -24,16 +24,18 @@ interface SchemaField {
 }
 
 // Get value at path
-function getValueAtPath(data: any, path: string): any {
+function getValueAtPath(data: unknown, path: string): unknown {
+  if (typeof data !== 'object' || data === null) return undefined
+  
   const keys = path.split('.')
-  let value = data
+  let value: unknown = data
   for (const key of keys) {
     if (value === null || value === undefined) return undefined
     if (Array.isArray(value) && /\[\d+\]/.test(key)) {
       const match = key.match(/\[(\d+)\]/)
       if (match && match[1]) {
         const index = parseInt(match[1])
-        if (!isNaN(index)) {
+        if (!isNaN(index) && index >= 0 && index < value.length) {
           value = value[index]
         } else {
           return undefined
@@ -41,15 +43,18 @@ function getValueAtPath(data: any, path: string): any {
       } else {
         return undefined
       }
+    } else if (typeof value === 'object' && value !== null) {
+      const valueObj = value as Record<string, unknown>
+      value = valueObj[key]
     } else {
-      value = value[key]
+      return undefined
     }
   }
   return value
 }
 
 // Format example value for display
-function formatExample(value: any): string {
+function formatExample(value: unknown): string {
   if (value === null || value === undefined) return '-'
   if (typeof value === 'string') {
     return value.length > 50 ? value.substring(0, 50) + '...' : value
@@ -66,7 +71,7 @@ function formatExample(value: any): string {
   return String(value)
 }
 
-function extractSchema(data: any, prefix = '', assetData: any): SchemaField[] {
+function extractSchema(data: unknown, prefix = '', assetData: unknown): SchemaField[] {
   const schema: SchemaField[] = []
   
   if (!data || typeof data !== 'object') {

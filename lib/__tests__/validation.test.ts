@@ -40,9 +40,9 @@ describe('sanitizeInput', () => {
   })
 
   it('should throw error for non-string input', () => {
-    expect(() => sanitizeInput(123 as any)).toThrow(ValidationError)
-    expect(() => sanitizeInput(null as any)).toThrow(ValidationError)
-    expect(() => sanitizeInput(undefined as any)).toThrow(ValidationError)
+    expect(() => sanitizeInput(123 as unknown as string)).toThrow(ValidationError)
+    expect(() => sanitizeInput(null as unknown as string)).toThrow(ValidationError)
+    expect(() => sanitizeInput(undefined as unknown as string)).toThrow(ValidationError)
   })
 })
 
@@ -84,9 +84,9 @@ describe('validateMessage', () => {
   })
 
   it('should reject non-string input', () => {
-    expect(() => validateMessage(null as any)).toThrow(ValidationError)
-    expect(() => validateMessage(123 as any)).toThrow(ValidationError)
-    expect(() => validateMessage({} as any)).toThrow(ValidationError)
+    expect(() => validateMessage(null as unknown as string)).toThrow(ValidationError)
+    expect(() => validateMessage(123 as unknown as string)).toThrow(ValidationError)
+    expect(() => validateMessage({} as unknown as string)).toThrow(ValidationError)
   })
 })
 
@@ -103,8 +103,8 @@ describe('validateCompanyId', () => {
 
   it('should reject empty company IDs', () => {
     expect(() => validateCompanyId('')).toThrow(ValidationError)
-    expect(() => validateCompanyId(null as any)).toThrow(ValidationError)
-    expect(() => validateCompanyId(undefined as any)).toThrow(ValidationError)
+    expect(() => validateCompanyId(null as unknown as string)).toThrow(ValidationError)
+    expect(() => validateCompanyId(undefined as unknown as string)).toThrow(ValidationError)
   })
 
   it('should reject company IDs that are too short', () => {
@@ -137,8 +137,8 @@ describe('validateSessionId', () => {
 
   it('should return undefined for empty input', () => {
     expect(validateSessionId('')).toBeUndefined()
-    expect(validateSessionId(null as any)).toBeUndefined()
-    expect(validateSessionId(undefined as any)).toBeUndefined()
+    expect(validateSessionId(null as unknown as string)).toBeUndefined()
+    expect(validateSessionId(undefined as unknown as string)).toBeUndefined()
   })
 
   it('should reject invalid session ID formats', () => {
@@ -153,8 +153,8 @@ describe('validateSessionId', () => {
   })
 
   it('should reject non-string input', () => {
-    expect(() => validateSessionId(123 as any)).toThrow(ValidationError)
-    expect(() => validateSessionId({} as any)).toThrow(ValidationError)
+    expect(() => validateSessionId(123 as unknown as string)).toThrow(ValidationError)
+    expect(() => validateSessionId({} as unknown as string)).toThrow(ValidationError)
   })
 })
 
@@ -166,8 +166,8 @@ describe('validateConversationId', () => {
 
   it('should return undefined for empty input', () => {
     expect(validateConversationId('')).toBeUndefined()
-    expect(validateConversationId(null as any)).toBeUndefined()
-    expect(validateConversationId(undefined as any)).toBeUndefined()
+    expect(validateConversationId(null as unknown as string)).toBeUndefined()
+    expect(validateConversationId(undefined as unknown as string)).toBeUndefined()
   })
 
   it('should reject invalid conversation ID formats', () => {

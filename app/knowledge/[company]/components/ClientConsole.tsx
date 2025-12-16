@@ -27,7 +27,7 @@ interface ClientConsoleProps {
       size: number
       lastModified: string
       data: any
-      stats: Record<string, any>
+      stats: Record<string, unknown>
     }>
   }
 }

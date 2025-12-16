@@ -10,7 +10,7 @@ import { ComponentType } from 'react'
  * @returns 组件
  * @throws 如果组件不存在，抛出错误
  */
-export async function loadProjectComponent<T = ComponentType<any>>(
+export async function loadProjectComponent<T = ComponentType<unknown>>(
   companyId: string,
   componentPath: string
 ): Promise<T> {
@@ -87,7 +87,7 @@ export async function loadProjectComponent<T = ComponentType<any>>(
  * @param componentName UI组件名称，例如 'button', 'dialog'
  * @returns UI 组件
  */
-export async function loadProjectUIComponent<T = ComponentType<any>>(
+export async function loadProjectUIComponent<T = ComponentType<unknown>>(
   companyId: string,
   componentName: string
 ): Promise<T> {
@@ -100,7 +100,7 @@ export async function loadProjectUIComponent<T = ComponentType<any>>(
  * @param componentName Chatbot组件名称，例如 'ChatbotWidget', 'ChatWelcome'
  * @returns Chatbot 组件
  */
-export async function loadProjectChatbotComponent<T = ComponentType<any>>(
+export async function loadProjectChatbotComponent<T = ComponentType<unknown>>(
   companyId: string,
   componentName: string
 ): Promise<T> {

@@ -16,7 +16,7 @@ interface AssetOverviewProps {
   totalSize: number
   files: Array<{
     key: string
-    stats: Record<string, any>
+    stats: Record<string, unknown>
   }>
 }
 
@@ -37,7 +37,7 @@ export function AssetOverview({ totalFiles, totalSize, files }: AssetOverviewPro
   }
 
   const getCategoryStats = () => {
-    const stats: Record<string, { count: number; items: any[] }> = {}
+    const stats: Record<string, { count: number; items: unknown[] }> = {}
     files.forEach(file => {
       if (!stats[file.key]) {
         stats[file.key] = { count: 0, items: [] }

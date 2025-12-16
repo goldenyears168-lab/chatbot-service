@@ -4,49 +4,31 @@ import { ErrorDisplay } from './ErrorDisplay'
 import { EmptyState } from './EmptyState'
 import { ClientConsole } from './components/ClientConsole'
 import { WidgetCodeDisplay } from './WidgetCodeDisplay'
-
-interface KnowledgeFile {
-  filename: string
-  name: string
-  key: string
-  number: number
-  size: number
-  lastModified: string
-  data: any
-  stats: Record<string, any>
-}
+import { loadKnowledgeData } from '@/lib/knowledge/loader'
+import { headers } from 'next/headers'
+import type { CompanyConfig } from '@/lib/config'
 
 interface KnowledgePageProps {
   params: Promise<{ company: string }> | { company: string }
 }
 
-async function getKnowledgeData(company: string) {
-  // 在 Next.js Server Component 中，可以使用相对路径调用 API Route
-  // 这会自动使用当前请求的 base URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
-  
-  // 使用绝对路径（如果提供了 baseUrl）或相对路径
-  const apiUrl = baseUrl 
-    ? `${baseUrl}/api/knowledge/${company}`
-    : `/api/knowledge/${company}`
-  
-  const response = await fetch(apiUrl, {
-    cache: 'no-store'
-  })
-  
-  if (!response.ok) {
-    throw new Error(`Failed to load knowledge base: ${response.statusText}`)
-  }
-  
-  return response.json()
-}
-
-function getBaseUrlForDisplay(): string {
-  // 用于 WidgetCodeDisplay 组件显示 baseUrl
+async function getBaseUrl(): Promise<string> {
   // 优先使用环境变量
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     return process.env.NEXT_PUBLIC_BASE_URL
+  }
+  
+  // 在 Edge Runtime 中，从请求头中获取 baseUrl
+  try {
+    const headersList = await headers()
+    const host = headersList.get('host') || headersList.get('x-forwarded-host')
+    const protocol = headersList.get('x-forwarded-proto') || 'https'
+    
+    if (host) {
+      return `${protocol}://${host}`
+    }
+  } catch (error) {
+    // 如果无法获取 headers，继续使用默认值
   }
   
   // 开发环境默认值
@@ -54,8 +36,11 @@ function getBaseUrlForDisplay(): string {
     return 'http://localhost:3000'
   }
   
-  // 生产环境返回空字符串，WidgetCodeDisplay 会处理
-  return ''
+  // 生产环境如果没有设置，抛出错误
+  throw new Error(
+    'NEXT_PUBLIC_BASE_URL environment variable is required in production. ' +
+    'Please set it in Cloudflare Pages environment variables.'
+  )
 }
 
 // 使用 Edge Runtime（Cloudflare Pages 要求）
@@ -64,16 +49,21 @@ export const runtime = 'edge'
 export default async function KnowledgePage({ params }: KnowledgePageProps) {
   const { company } = await Promise.resolve(params)
   
-  // 获取用于显示的 baseUrl（可选）
-  const baseUrl = getBaseUrlForDisplay()
+  // 获取 baseUrl（用于加载知识库数据）
+  const baseUrl = await getBaseUrl()
   
-  let knowledgeData: any = null
-  let companyConfig: any = null
+  // 获取用于显示的 baseUrl（可选）
+  const displayBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : baseUrl)
+  
+  let knowledgeData: Awaited<ReturnType<typeof loadKnowledgeData>> | null = null
+  let companyConfig: CompanyConfig | null = null
   let error: string | null = null
   
   try {
+    // 直接使用共享的加载函数，而不是通过 HTTP fetch
     [knowledgeData, companyConfig] = await Promise.all([
-      getKnowledgeData(company),
+      loadKnowledgeData(company, baseUrl),
       getCompanyConfig(company)
     ])
     
@@ -84,7 +74,7 @@ export default async function KnowledgePage({ params }: KnowledgePageProps) {
     
     // 驗證檔案資料完整性
     if (knowledgeData?.files) {
-      knowledgeData.files = knowledgeData.files.filter((file: KnowledgeFile) => 
+      knowledgeData.files = knowledgeData.files.filter((file) => 
         file && 
         file.filename && 
         file.key && 
@@ -123,7 +113,7 @@ export default async function KnowledgePage({ params }: KnowledgePageProps) {
             description="請檢查知識庫設定或聯絡管理員"
             icon="inbox"
           />
-        ) : !knowledgeData.files || knowledgeData.files.length === 0 ? (
+        ) : (knowledgeData && knowledgeData.files && knowledgeData.files.length === 0) ? (
           <EmptyState 
             message="暫無知識庫檔案"
             description="知識庫中還沒有任何檔案，請先新增知識庫檔案"
@@ -137,8 +127,8 @@ export default async function KnowledgePage({ params }: KnowledgePageProps) {
               companyNameEn={companyConfig?.name_en}
               knowledgeData={knowledgeData}
             />
-            {baseUrl && (
-              <WidgetCodeDisplay companyId={company} baseUrl={baseUrl} />
+            {displayBaseUrl && (
+              <WidgetCodeDisplay companyId={company} baseUrl={displayBaseUrl} />
             )}
           </>
         )}

@@ -8,7 +8,7 @@ export class AppError extends Error {
     message: string,
     public statusCode: number = 500,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message)
     this.name = 'AppError'
@@ -16,7 +16,7 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 400, 'VALIDATION_ERROR', details)
     this.name = 'ValidationError'
   }
@@ -42,7 +42,7 @@ export class UnauthorizedError extends AppError {
 export function formatErrorResponse(error: unknown): {
   error: string
   code?: string
-  details?: any
+  details?: unknown
 } {
   if (error instanceof AppError) {
     // 用户定义的错误，可以安全返回
@@ -79,7 +79,7 @@ export function formatErrorResponse(error: unknown): {
 /**
  * 记录错误（生产环境可以发送到错误追踪服务）
  */
-export function logError(error: unknown, context?: Record<string, any>) {
+export function logError(error: unknown, context?: Record<string, unknown>) {
   // 使用统一的日志服务
   loggerError(
     error instanceof Error ? error.message : String(error),
