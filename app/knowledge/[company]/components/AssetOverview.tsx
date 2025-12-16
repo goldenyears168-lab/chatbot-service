@@ -88,13 +88,14 @@ export function AssetOverview({ totalFiles, totalSize, files }: AssetOverviewPro
         {(() => {
           const faqFile = files.find(f => f.key === 'faq_detailed')
           const totalQuestions = faqFile?.stats?.totalQuestions
-          return totalQuestions ? (
+          const questionsCount = typeof totalQuestions === 'number' ? totalQuestions : (typeof totalQuestions === 'string' ? parseInt(totalQuestions, 10) : 0)
+          return questionsCount > 0 ? (
             <Card className="bg-gradient-to-br from-emerald-50 via-green-50/50 to-emerald-50 border-[var(--border-subtle)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-xl)] hover:border-[var(--accent-emerald-200)] transition-all duration-300">
               <CardContent className="pt-4 pb-4 px-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <p className="text-sm font-semibold text-muted-foreground">FAQ 問題</p>
-                    <p className="text-2xl font-bold text-foreground tracking-tight">{totalQuestions}</p>
+                    <p className="text-2xl font-bold text-foreground tracking-tight">{questionsCount}</p>
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
                     <MessageSquare className="w-5 h-5 text-green-600" />
@@ -108,13 +109,14 @@ export function AssetOverview({ totalFiles, totalSize, files }: AssetOverviewPro
         {(() => {
           const servicesFile = files.find(f => f.key === 'services')
           const serviceCount = servicesFile?.stats?.count
-          return serviceCount ? (
+          const count = typeof serviceCount === 'number' ? serviceCount : (typeof serviceCount === 'string' ? parseInt(serviceCount, 10) : 0)
+          return count > 0 ? (
             <Card className="bg-gradient-to-br from-amber-50 via-orange-50/50 to-amber-50 border-[var(--border-subtle)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-xl)] hover:border-[var(--accent-amber-200)] transition-all duration-300">
               <CardContent className="pt-4 pb-4 px-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <p className="text-sm font-semibold text-muted-foreground">服務項目</p>
-                    <p className="text-2xl font-bold text-foreground tracking-tight">{serviceCount}</p>
+                    <p className="text-2xl font-bold text-foreground tracking-tight">{count}</p>
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
                     <Database className="w-5 h-5 text-orange-600" />

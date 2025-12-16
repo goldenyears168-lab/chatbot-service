@@ -79,8 +79,11 @@ export async function GET(
     // 尝试多种可能的 FAQ 数据键名
     const faqData = knowledgeBase.faq_detailed || knowledgeBase.faq || knowledgeBase.faqMenu || null
     
+    // 类型守卫：检查 faqData 是否有 categories 属性
     if (faqData && typeof faqData === 'object' && faqData !== null && 'categories' in faqData) {
-      return NextResponse.json(faqData, { headers: corsHeaders })
+      // 类型断言：我们知道 faqData 有 categories 属性
+      const typedFaqData = faqData as { categories: unknown; [key: string]: unknown }
+      return NextResponse.json(typedFaqData, { headers: corsHeaders })
     }
     
     // 如果没有找到 FAQ，返回空结构

@@ -125,6 +125,28 @@ export default async function DemoPage({
               const contactChannels = companyInfoObj.contact_channels
               
               if (branches && Array.isArray(branches) && branches.length > 0) {
+                const contactElements: React.ReactNode[] = []
+                if (contactChannels && typeof contactChannels === 'object' && contactChannels !== null) {
+                  const channels = contactChannels as Record<string, unknown>
+                  if (channels.email && typeof channels.email === 'string') {
+                    contactElements.push(
+                      <p key="email" className="text-sm text-foreground mb-1">
+                        <span className="font-medium">邮箱:</span>{' '}
+                        <a href={`mailto:${channels.email}`} className="text-primary hover:underline">
+                          {channels.email}
+                        </a>
+                      </p>
+                    )
+                  }
+                  if (channels.ig && typeof channels.ig === 'string') {
+                    contactElements.push(
+                      <p key="ig" className="text-sm text-foreground">
+                        <span className="font-medium">Instagram:</span> {channels.ig}
+                      </p>
+                    )
+                  }
+                }
+                
                 return (
                   <div className="space-y-4">
                     {(branches as unknown[]).filter(isBranch).map((branch: Branch) => (
@@ -150,30 +172,9 @@ export default async function DemoPage({
                         )}
                       </div>
                     ))}
-                    {contactChannels && typeof contactChannels === 'object' && contactChannels !== null && (
+                    {contactElements.length > 0 && (
                       <div className="mt-4 pt-4 border-t">
-                        {(() => {
-                          const channels = contactChannels as Record<string, unknown>
-                          const elements: React.ReactNode[] = []
-                          if (channels.email && typeof channels.email === 'string') {
-                            elements.push(
-                              <p key="email" className="text-sm text-foreground mb-1">
-                                <span className="font-medium">邮箱:</span>{' '}
-                                <a href={`mailto:${channels.email}`} className="text-primary hover:underline">
-                                  {channels.email}
-                                </a>
-                              </p>
-                            )
-                          }
-                          if (channels.ig && typeof channels.ig === 'string') {
-                            elements.push(
-                              <p key="ig" className="text-sm text-foreground">
-                                <span className="font-medium">Instagram:</span> {channels.ig}
-                              </p>
-                            )
-                          }
-                          return elements
-                        })()}
+                        {contactElements}
                       </div>
                     )}
                   </div>

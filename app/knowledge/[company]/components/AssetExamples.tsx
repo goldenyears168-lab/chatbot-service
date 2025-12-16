@@ -106,11 +106,12 @@ function getExamples(assetKey: string, data: unknown): Example[] {
       break
       
     case 'ai_config':
-      if (data.intents) {
-        const intents = Array.isArray(data.intents) ? data.intents : Object.values(data.intents)
+      if (dataObj.intents) {
+        const intents = Array.isArray(dataObj.intents) ? dataObj.intents : Object.values(dataObj.intents)
         intents.slice(0, 3).forEach((intent: unknown, i: number) => {
+          const intentObj = typeof intent === 'object' && intent !== null ? intent as Record<string, unknown> : {}
           examples.push({
-            title: `意圖範例 ${i + 1}: ${intent.id || `意圖 ${i + 1}`}`,
+            title: `意圖範例 ${i + 1}: ${String(intentObj.id || `意圖 ${i + 1}`)}`,
             content: intent,
             path: `intents[${i}]`,
             whyItMatters: getWhyItMatters(assetKey)
@@ -120,14 +121,14 @@ function getExamples(assetKey: string, data: unknown): Example[] {
       break
       
     case 'response_templates':
-      if (data.templates) {
-        const templates = Array.isArray(data.templates) ? data.templates : Object.entries(data.templates)
+      if (dataObj.templates) {
+        const templates = Array.isArray(dataObj.templates) ? dataObj.templates : Object.entries(dataObj.templates)
         templates.slice(0, 3).forEach((template: unknown, i: number) => {
           const [key, value] = Array.isArray(template) ? template : [i, template]
           examples.push({
-            title: `範本範例 ${i + 1}: ${key}`,
+            title: `範本範例 ${i + 1}: ${String(key)}`,
             content: value || template,
-            path: `templates.${key}`,
+            path: `templates.${String(key)}`,
             whyItMatters: getWhyItMatters(assetKey)
           })
         })
@@ -135,11 +136,12 @@ function getExamples(assetKey: string, data: unknown): Example[] {
       break
       
     case 'personas':
-      if (data.personas) {
-        const personas = Array.isArray(data.personas) ? data.personas : Object.values(data.personas)
+      if (dataObj.personas) {
+        const personas = Array.isArray(dataObj.personas) ? dataObj.personas : Object.values(dataObj.personas)
         personas.slice(0, 3).forEach((persona: unknown, i: number) => {
+          const personaObj = typeof persona === 'object' && persona !== null ? persona as Record<string, unknown> : {}
           examples.push({
-            title: `角色範例 ${i + 1}: ${persona.id || persona.name || `角色 ${i + 1}`}`,
+            title: `角色範例 ${i + 1}: ${String(personaObj.id || personaObj.name || `角色 ${i + 1}`)}`,
             content: persona,
             path: `personas[${i}]`,
             whyItMatters: getWhyItMatters(assetKey)
