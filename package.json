@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run copy:knowledge && next build",
+    "build": "npm run copy:knowledge && next build && npm run pages:build",
     "copy:knowledge": "bash scripts/copy-knowledge.sh",
     "pages:build": "npx @cloudflare/next-on-pages",
     "preview": "npm run pages:build && wrangler pages dev .vercel/output/static",
