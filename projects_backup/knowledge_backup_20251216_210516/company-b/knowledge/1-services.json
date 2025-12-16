@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-15",
+  "services": [
+    {
+      "id": "consulting_service",
+      "name": "企業諮詢服務",
+      "name_en": "Business Consulting",
+      "one_line": "專業企業管理與策略諮詢服務",
+      "price_range": "NT$50,000 - NT$200,000",
+      "price_min": 50000,
+      "price_unit": "專案",
+      "pricing_model": "按專案計費"
+    },
+    {
+      "id": "training_service",
+      "name": "企業培訓課程",
+      "name_en": "Corporate Training",
+      "one_line": "客製化企業培訓解決方案",
+      "price_range": "NT$30,000 - NT$100,000",
+      "price_min": 30000,
+      "price_unit": "場次",
+      "pricing_model": "按場次計費"
+    }
+  ]
+}

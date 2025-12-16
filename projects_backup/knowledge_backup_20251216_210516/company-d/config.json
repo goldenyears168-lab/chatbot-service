@@ -1,0 +1,20 @@
+{
+  "id": "company-d",
+  "name": "D公司",
+  "name_en": "Company D",
+  "allowedOrigins": [
+    "https://www.company-d.com",
+    "https://company-d.com",
+    "https://*.pages.dev",
+    "http://localhost:8080",
+    "http://localhost:8788"
+  ],
+  "widgetConfig": {
+    "theme": "light",
+    "locale": "zh-TW"
+  },
+  "apiConfig": {
+    "useSharedApiKey": true,
+    "apiKeyEnv": "GEMINI_API_KEY"
+  }
+}

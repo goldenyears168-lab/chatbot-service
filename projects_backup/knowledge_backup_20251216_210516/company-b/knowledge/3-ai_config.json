@@ -1,0 +1,143 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-01-20",
+  "data_source": "knowledge/ai_config.json (合併 intent_config + entity_patterns + personas)",
+  "_section_ui": "UI 設定：控制前端顯示行為",
+  "ui": {
+    "_comment": "UI 顯示設定",
+    "removeMarkdownBold": true,
+    "_field_description": {
+      "removeMarkdownBold": "是否移除 AI 回复中的 ** 标记（true: 移除，false: 保留或转换为 HTML 粗体）"
+    }
+  },
+  "intents": [
+    {
+      "id": "greeting",
+      "priority": 10,
+      "keywords": ["你好", "您好", "hi", "hello"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    },
+    {
+      "id": "service_inquiry",
+      "priority": 11,
+      "keywords": ["服務", "方案", "諮詢", "培訓"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    },
+    {
+      "id": "price_inquiry",
+      "priority": 3,
+      "keywords": ["價格", "費用", "多少錢", "報價"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    },
+    {
+      "id": "contact_inquiry",
+      "priority": 5,
+      "keywords": ["聯絡", "電話", "地址", "email"],
+      "excludeKeywords": [],
+      "contextKeywords": []
+    }
+  ],
+  "fallback": {
+    "useContextIntent": true,
+    "contextIntentThreshold": 10,
+    "defaultIntent": "service_inquiry"
+  },
+  "entity_patterns": {
+    "service_type": [
+      {
+        "id": "headshot_korean",
+        "keywords": ["證件照", "證照", "護照照", "簽證照", "headshot", "韓式"]
+      },
+      {
+        "id": "portrait_pro",
+        "keywords": ["形象照", "linkedin照", "履歷照", "職場照", "專業照", "professional"]
+      },
+      {
+        "id": "portrait_grad_personal",
+        "keywords": ["寫真", "個人寫真", "畢業寫真", "畢業照", "artistic"]
+      },
+      {
+        "id": "group_family",
+        "keywords": ["全家福", "家庭照", "家庭合照", "朋友合照", "團體照", "group"]
+      },
+      {
+        "id": "workshop_challenge",
+        "keywords": ["一日攝影師", "攝影體驗", "攝影課", "工作坊", "workshop"]
+      }
+    ],
+    "use_case": [
+      {
+        "id": "linkedin_resume",
+        "keywords": ["履歷", "linkedin", "求職", "面試", "轉職", "resume"]
+      },
+      {
+        "id": "official_document",
+        "keywords": ["護照", "簽證", "身分證", "駕照", "證照", "official"]
+      },
+      {
+        "id": "memorial",
+        "keywords": ["紀念", "生日", "畢業", "紀錄", "里程碑", "memorial"]
+      },
+      {
+        "id": "social_media",
+        "keywords": ["ig", "社群", "粉專", "個人品牌", "自媒體", "social"]
+      },
+      {
+        "id": "family_couple",
+        "keywords": ["全家福", "親子", "情侶", "家人", "小孩", "family"]
+      }
+    ],
+    "persona": [
+      {
+        "id": "student_graduating",
+        "keywords": ["學生", "畢業", "大學", "碩士", "freshman"]
+      },
+      {
+        "id": "pro_switching_job",
+        "keywords": ["轉職", "上班族", "工程師", "顧問", "律師", "professional"]
+      },
+      {
+        "id": "family_keeper",
+        "keywords": ["家庭", "媽媽", "爸爸", "長輩", "主理人", "family"]
+      },
+      {
+        "id": "hr_corporate",
+        "keywords": ["企業", "公司", "人資", "福委", "團體", "corporate"]
+      }
+    ],
+    "branch": {
+      "zhongshan": {
+        "keywords": ["中山", "zhongshan"]
+      },
+      "gongguan": {
+        "keywords": ["公館", "gongguan", "台大"]
+      }
+    },
+    "booking_action": {
+      "book": {
+        "keywords": ["預約", "book"]
+      },
+      "reschedule": {
+        "keywords": ["改期", "reschedule"]
+      },
+      "cancel": {
+        "keywords": ["取消", "cancel"]
+      }
+    }
+  },
+  "personas": [
+    {
+      "id": "professional_assistant",
+      "name": "專業助理",
+      "tone": "專業、親切、有效率",
+      "characteristics": [
+        "使用專業但易懂的語言",
+        "主動提供解決方案",
+        "保持友善的溝通態度"
+      ]
+    }
+  ]
+}

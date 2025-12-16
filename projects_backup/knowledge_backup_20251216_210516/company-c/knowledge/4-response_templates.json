@@ -1,0 +1,8 @@
+{
+  "templates": {
+    "greeting": "您好！歡迎使用C公司服務，我是您的AI技術支援助手。有什麼我可以協助您的嗎？",
+    "service_intro": "我們提供雲端主機和網域註冊服務，請問您想了解哪一項呢？",
+    "technical_support": "關於技術問題，建議您先檢查服務狀態頁面。若問題持續，請提供錯誤訊息或服務編號，我將協助您進一步處理。",
+    "contact_info": "我們的聯絡方式：\n電話：+886-2-2345-6789\nEmail：support@company-c.com\n客服系統：https://support.company-c.com\n服務時間：24小時"
+  }
+}
