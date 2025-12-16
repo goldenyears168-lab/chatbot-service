@@ -89,7 +89,7 @@ export async function POST(
     let requestBody: unknown
     try {
       requestBody = await request.json()
-    } catch (error) {
+    } catch {
       throw new ValidationError('Invalid JSON in request body')
     }
 

@@ -44,7 +44,7 @@ export async function GET(
         ]
         fileList = commonFiles
       }
-    } catch (error) {
+    } catch {
       // 如果清单文件读取失败，尝试常见的文件名模式
       const commonFiles = [
         '1-company_info.json',
@@ -110,8 +110,8 @@ export async function GET(
       number: number
       size: number
       lastModified: string
-      data: any
-      stats: Record<string, any>
+      data: unknown
+      stats: Record<string, unknown>
     }>
     
     validFiles.sort((a, b) => a.number - b.number)
@@ -138,62 +138,92 @@ export async function GET(
   }
 }
 
-function getFileStats(key: string, data: any): Record<string, any> {
-  const stats: Record<string, any> = {}
+function getFileStats(key: string, data: unknown): Record<string, unknown> {
+  const stats: Record<string, unknown> = {}
+  
+  // 类型守卫：检查 data 是否为对象
+  if (typeof data !== 'object' || data === null) {
+    return stats
+  }
+  
+  const dataObj = data as Record<string, unknown>
   
   switch (key) {
     case 'services':
-      if (data.services) {
-        const services = Array.isArray(data.services) ? data.services : Object.values(data.services)
+      if (dataObj.services) {
+        const services = Array.isArray(dataObj.services) ? dataObj.services : Object.values(dataObj.services)
         stats.count = services.length
-        stats.items = services.map((s: any) => s.name || s.id).filter(Boolean)
+        stats.items = services.map((s: unknown) => {
+          if (typeof s === 'object' && s !== null) {
+            const service = s as Record<string, unknown>
+            return service.name || service.id
+          }
+          return null
+        }).filter(Boolean)
       }
       break
       
     case 'company_info':
-      if (data.branches) {
-        stats.branches = Array.isArray(data.branches) ? data.branches.length : Object.keys(data.branches).length
-        stats.branchNames = Array.isArray(data.branches) 
-          ? data.branches.map((b: any) => b.name).filter(Boolean)
-          : Object.values(data.branches).map((b: any) => b.name).filter(Boolean)
+      if (dataObj.branches) {
+        const branches = dataObj.branches
+        stats.branches = Array.isArray(branches) ? branches.length : Object.keys(branches as Record<string, unknown>).length
+        stats.branchNames = Array.isArray(branches) 
+          ? branches.map((b: unknown) => {
+              if (typeof b === 'object' && b !== null) {
+                const branch = b as Record<string, unknown>
+                return branch.name
+              }
+              return null
+            }).filter(Boolean)
+          : Object.values(branches as Record<string, unknown>).map((b: unknown) => {
+              if (typeof b === 'object' && b !== null) {
+                const branch = b as Record<string, unknown>
+                return branch.name
+              }
+              return null
+            }).filter(Boolean)
       }
-      if (data.contact_channels || data.contact) {
+      if ('contact_channels' in dataObj || 'contact' in dataObj) {
         stats.hasContact = true
       }
       break
       
     case 'faq_detailed':
-      if (data.categories) {
-        const categories = Object.keys(data.categories)
+      if (dataObj.categories && typeof dataObj.categories === 'object') {
+        const categories = Object.keys(dataObj.categories)
         stats.categories = categories.length
         stats.categoryNames = categories
         let totalQuestions = 0
         categories.forEach((cat: string) => {
-          const questions = data.categories[cat]?.questions || []
-          totalQuestions += questions.length
+          const category = (dataObj.categories as Record<string, unknown>)[cat]
+          if (typeof category === 'object' && category !== null) {
+            const categoryObj = category as Record<string, unknown>
+            const questions = Array.isArray(categoryObj.questions) ? categoryObj.questions : []
+            totalQuestions += questions.length
+          }
         })
         stats.totalQuestions = totalQuestions
       }
       break
       
     case 'ai_config':
-      if (data.intents) {
-        stats.intents = Array.isArray(data.intents) ? data.intents.length : Object.keys(data.intents).length
+      if (dataObj.intents) {
+        stats.intents = Array.isArray(dataObj.intents) ? dataObj.intents.length : Object.keys(dataObj.intents as Record<string, unknown>).length
       }
-      if (data.entities) {
-        stats.entities = Array.isArray(data.entities) ? data.entities.length : Object.keys(data.entities).length
+      if (dataObj.entities) {
+        stats.entities = Array.isArray(dataObj.entities) ? dataObj.entities.length : Object.keys(dataObj.entities as Record<string, unknown>).length
       }
       break
       
     case 'response_templates':
-      if (data.templates) {
-        stats.templates = Array.isArray(data.templates) ? data.templates.length : Object.keys(data.templates).length
+      if (dataObj.templates) {
+        stats.templates = Array.isArray(dataObj.templates) ? dataObj.templates.length : Object.keys(dataObj.templates as Record<string, unknown>).length
       }
       break
       
     case 'personas':
-      if (data.personas) {
-        stats.personas = Array.isArray(data.personas) ? data.personas.length : Object.keys(data.personas).length
+      if (dataObj.personas) {
+        stats.personas = Array.isArray(dataObj.personas) ? dataObj.personas.length : Object.keys(dataObj.personas as Record<string, unknown>).length
       }
       break
   }

@@ -10,8 +10,8 @@ interface KnowledgeFile {
   filename: string
   name: string
   key: string
-  data: any
-  stats: Record<string, any>
+  data: unknown
+  stats: Record<string, unknown>
 }
 
 interface KnowledgeViewerProps {
@@ -22,7 +22,7 @@ export function KnowledgeViewer({ file }: KnowledgeViewerProps) {
   const [viewMode, setViewMode] = useState<'preview' | 'json'>('preview')
   const [renderError, setRenderError] = useState<Error | null>(null)
   
-  // 資料驗證
+  // 資料驗證（必須在 Hooks 之後）
   if (!file) {
     return <EmptyState message="檔案資料載入失敗" icon="file" />
   }
@@ -97,13 +97,14 @@ export function KnowledgeViewer({ file }: KnowledgeViewerProps) {
   )
 }
 
-function renderServices(data: any) {
-  if (!data) {
+function renderServices(data: unknown) {
+  if (!data || typeof data !== 'object') {
     return <EmptyState message="暫無服務資訊" icon="file" />
   }
   
-  const services = data.services 
-    ? (Array.isArray(data.services) ? data.services : Object.values(data.services))
+  const dataObj = data as Record<string, unknown>
+  const services = dataObj.services 
+    ? (Array.isArray(dataObj.services) ? dataObj.services : Object.values(dataObj.services))
     : []
   
   if (!services || services.length === 0) {
@@ -112,32 +113,35 @@ function renderServices(data: any) {
   
   return (
     <div className="space-y-3">
-      {services.map((service: any, index: number) => (
+      {services.map((service: unknown, index: number) => {
+        const serviceObj = typeof service === 'object' && service !== null ? service as Record<string, unknown> : {}
+        return (
         <div key={index} className="bg-background p-4 rounded-lg border border-border">
-          <h4 className="font-semibold text-foreground mb-1.5 text-base">{service.name || `服務 ${index + 1}`}</h4>
-          {service.one_line && (
-            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{service.one_line}</p>
+          <h4 className="font-semibold text-foreground mb-1.5 text-base">{String(serviceObj.name || `服務 ${index + 1}`)}</h4>
+          {String(serviceObj.one_line) && (
+            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{String(serviceObj.one_line)}</p>
           )}
-          {service.price_range && (
-            <p className="text-xs text-muted-foreground font-medium">價格: {service.price_range}</p>
+          {String(serviceObj.price_range) && (
+            <p className="text-xs text-muted-foreground font-medium">價格: {String(serviceObj.price_range || "")}</p>
           )}
         </div>
-      ))}
+        )})}
     </div>
   )
 }
 
-function renderCompanyInfo(data: any) {
-  if (!data) {
+function renderCompanyInfo(data: unknown) {
+  if (!data || typeof data !== 'object') {
     return <EmptyState message="暫無專案資訊" icon="file" />
   }
   
-  const branches = data.branches 
-    ? (Array.isArray(data.branches) ? data.branches : Object.values(data.branches))
+  const dataObj = data as Record<string, unknown>
+  const branches = dataObj.branches 
+    ? (Array.isArray(dataObj.branches) ? dataObj.branches : Object.values(dataObj.branches))
     : []
   
   if (!branches || branches.length === 0) {
-    if (!data.contact_channels && !data.contact) {
+    if (!('contact_channels' in dataObj) && !('contact' in dataObj)) {
       return <EmptyState message="暫無專案資訊" icon="file" />
     }
   }
@@ -147,29 +151,32 @@ function renderCompanyInfo(data: any) {
       {branches.length > 0 && (
         <div>
           <h4 className="font-semibold text-foreground mb-3 text-base">分店資訊</h4>
-          {branches.map((branch: any, index: number) => (
-            <div key={index} className="bg-background p-4 rounded-lg border border-border mb-3">
-              <h5 className="font-semibold text-foreground mb-1.5">{branch.name}</h5>
-              {branch.address && (
-                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{branch.address}</p>
-              )}
-              {branch.phone && (
-                <p className="text-xs text-muted-foreground mt-2 font-medium">電話: {branch.phone}</p>
-              )}
-            </div>
-          ))}
+          {branches.map((branch: unknown, index: number) => {
+            const branchObj = typeof branch === "object" && branch !== null ? branch as Record<string, unknown> : {}
+            return (
+              <div key={index} className="bg-background p-4 rounded-lg border border-border mb-3">
+                <h5 className="font-semibold text-foreground mb-1.5">{String(branchObj.name || "")}</h5>
+                {String(branchObj.address) && (
+                  <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{String(branchObj.address || "")}</p>
+                )}
+                {String(branchObj.phone) && (
+                  <p className="text-xs text-muted-foreground mt-2 font-medium">電話: {String(branchObj.phone || "")}</p>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
       
-      {(data.contact_channels || data.contact) && (
+      {((dataObj.contact_channels || dataObj.contact) && (dataObj.contact_channels || dataObj.contact) !== null) && (
         <div>
           <h4 className="font-semibold text-foreground mb-3 text-base">聯絡方式</h4>
           <div className="bg-background p-4 rounded-lg border border-border">
-            {data.contact_channels?.email && (
-              <p className="text-sm text-muted-foreground mb-1.5">Email: {data.contact_channels.email}</p>
+            {dataObj.contact_channels && typeof dataObj.contact_channels === 'object' && dataObj.contact_channels !== null && 'email' in dataObj.contact_channels && (
+              <p className="text-sm text-muted-foreground mb-1.5">Email: {String((dataObj.contact_channels as Record<string, unknown>).email || '')}</p>
             )}
-            {data.contact_channels?.phone && (
-              <p className="text-sm text-muted-foreground">電話: {data.contact_channels.phone}</p>
+            {dataObj.contact_channels && typeof dataObj.contact_channels === 'object' && dataObj.contact_channels !== null && 'phone' in dataObj.contact_channels && (
+              <p className="text-sm text-muted-foreground">電話: {String((dataObj.contact_channels as Record<string, unknown>).phone || '')}</p>
             )}
           </div>
         </div>
@@ -178,16 +185,18 @@ function renderCompanyInfo(data: any) {
   )
 }
 
-function renderFAQ(data: any) {
-  if (!data) {
+function renderFAQ(data: unknown) {
+  if (!data || typeof data !== 'object') {
+    return <EmptyState message="暫無資料" icon="file" />
+  }
+  
+  const dataObj = data as Record<string, unknown>
+  
+  if (!dataObj.categories || typeof dataObj.categories !== 'object') {
     return <EmptyState message="暫無 FAQ 資料" icon="file" />
   }
   
-  if (!data.categories || typeof data.categories !== 'object') {
-    return <EmptyState message="暫無 FAQ 資料" icon="file" />
-  }
-  
-  const categories = Object.keys(data.categories)
+  const categories = Object.keys(dataObj.categories)
   
   if (categories.length === 0) {
     return <EmptyState message="暫無 FAQ 資料" icon="file" />
@@ -196,36 +205,40 @@ function renderFAQ(data: any) {
   return (
     <div className="space-y-4">
       {categories.map((catKey: string) => {
-        const category = data.categories[catKey]
+        const category = dataObj.categories[catKey]
         const questions = category?.questions || []
         
         return (
           <div key={catKey} className="bg-background p-4 rounded-lg border border-border">
             <h4 className="font-semibold text-foreground mb-3 text-base">{category?.title || catKey}</h4>
             <div className="space-y-3">
-              {questions.map((q: any, index: number) => (
+              {questions.map((q: unknown, index: number) => { const qObj = typeof q === "object" && q !== null ? q as Record<string, unknown> : {}; return (
                 <div key={index} className="text-sm">
-                  <p className="text-foreground font-semibold mb-1">Q: {q.question}</p>
-                  <p className="text-muted-foreground text-xs mt-1.5 leading-relaxed">{q.answer}</p>
+                  <p className="text-foreground font-semibold mb-1">Q: {String(qObj.question || "")}</p>
+                  <p className="text-muted-foreground text-xs mt-1.5 leading-relaxed">{String(qObj.answer || "")}</p>
                 </div>
               ))}
             </div>
           </div>
-        )
-      })}
+        )})}
     </div>
   )
 }
 
-function renderAIConfig(data: any) {
+function renderAIConfig(data: unknown) {
+  if (!data || typeof data !== 'object') {
+    return <EmptyState message="暫無資料" icon="file" />
+  }
+  
+  const dataObj = data as Record<string, unknown>
   if (!data) {
     return <EmptyState message="暫無 AI 設定資料" icon="file" />
   }
   
-  const intents = data.intents 
-    ? (Array.isArray(data.intents) ? data.intents : Object.values(data.intents))
+  const intents = dataObj.intents 
+    ? (Array.isArray(dataObj.intents) ? dataObj.intents : Object.values(dataObj.intents))
     : []
-  const entityPatterns = data.entity_patterns || {}
+  const entityPatterns = dataObj.entity_patterns || {}
   
   if (intents.length === 0 && Object.keys(entityPatterns).length === 0) {
     return <EmptyState message="暫無 AI 設定資料" icon="file" />
@@ -235,31 +248,31 @@ function renderAIConfig(data: any) {
     <div className="space-y-4">
       {intents.length > 0 && (
         <div>
-          <h4 className="font-semibold text-foreground mb-3 text-base">意圖識別 ({intents.length} 個)</h4>
+          <h4 className="font-semibold text-foreground mb-3 text-base">意圖識別 ({String(intents.length || "")} 個)</h4>
           <div className="space-y-3">
-            {intents.map((intent: any, index: number) => (
-              <div key={intent.id || index} className="bg-background p-4 rounded-lg border border-border">
+            {intents.map((intent: unknown, index: number) => { const intentObj = typeof intent === "object" && intent !== null ? intent as Record<string, unknown> : {}; return (
+              <div key={String(intentObj.id) || index} className="bg-background p-4 rounded-lg border border-border">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <h5 className="font-semibold text-foreground text-sm mb-1">
-                      {intent.id || `意圖 ${index + 1}`}
+                      {String(intentObj.id) || `意圖 ${index + 1}`}
                     </h5>
-                    {intent._comment && (
-                      <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{intent._comment}</p>
+                    {String(intentObj._comment) && (
+                      <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{String(intentObj._comment || "")}</p>
                     )}
                   </div>
-                  {intent.priority !== undefined && (
+                  {intentObj.priority !== undefined && (
                     <span className="text-xs bg-muted px-2 py-1 rounded font-medium shrink-0 ml-2">
-                      優先級: {intent.priority}
+                      優先級: {String(intentObj.priority || "")}
                     </span>
                   )}
                 </div>
                 
-                {intent.keywords && Array.isArray(intent.keywords) && intent.keywords.length > 0 && (
+                {String(intentObj.keywords) && Array.isArray(intentObj.keywords) && intentObj.keywords.length > 0 && (
                   <div className="mb-2">
                     <p className="text-xs font-semibold text-muted-foreground mb-1.5">關鍵詞：</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {intent.keywords.map((keyword: string, kwIndex: number) => (
+                      {intentObj.keywords.map((keyword: string, kwIndex: number) => (
                         <span key={kwIndex} className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
                           {keyword}
                         </span>
@@ -268,11 +281,11 @@ function renderAIConfig(data: any) {
                   </div>
                 )}
                 
-                {intent.excludeKeywords && Array.isArray(intent.excludeKeywords) && intent.excludeKeywords.length > 0 && (
+                {String(intentObj.excludeKeywords) && Array.isArray(intentObj.excludeKeywords) && intentObj.excludeKeywords.length > 0 && (
                   <div className="mb-2">
                     <p className="text-xs font-semibold text-muted-foreground mb-1.5">排除關鍵詞：</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {intent.excludeKeywords.map((keyword: string, kwIndex: number) => (
+                      {intentObj.excludeKeywords.map((keyword: string, kwIndex: number) => (
                         <span key={kwIndex} className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded border border-red-200">
                           {keyword}
                         </span>
@@ -281,11 +294,11 @@ function renderAIConfig(data: any) {
                   </div>
                 )}
                 
-                {intent.contextKeywords && Array.isArray(intent.contextKeywords) && intent.contextKeywords.length > 0 && (
+                {String(intentObj.contextKeywords) && Array.isArray(intentObj.contextKeywords) && intentObj.contextKeywords.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground mb-1.5">上下文關鍵詞：</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {intent.contextKeywords.map((keyword: string, kwIndex: number) => (
+                      {intentObj.contextKeywords.map((keyword: string, kwIndex: number) => (
                         <span key={kwIndex} className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-200">
                           {keyword}
                         </span>
@@ -303,17 +316,16 @@ function renderAIConfig(data: any) {
         <div>
           <h4 className="font-semibold text-foreground mb-3 text-base">實體提取模式</h4>
           <div className="space-y-4">
-            {Object.entries(entityPatterns).map(([entityType, entities]: [string, any]) => {
+            {Object.entries(entityPatterns).map(([entityType, entities]: [string, unknown]) => {
               if (!entities || (Array.isArray(entities) && entities.length === 0) || (typeof entities === 'object' && Object.keys(entities).length === 0)) {
                 return null
               }
               
               const entityList = Array.isArray(entities) 
                 ? entities 
-                : Object.entries(entities).map(([key, value]: [string, any]) => ({
+                : Object.entries(entities).map(([key, value]: [string, unknown]) => ({
                     id: key,
-                    ...(typeof value === 'object' ? value : { keywords: value })
-                  }))
+                    ...(typeof value === 'object' ? value : { keywords: value })}))
               
               if (entityList.length === 0) return null
               
@@ -323,22 +335,22 @@ function renderAIConfig(data: any) {
                     {entityType.replace(/_/g, ' ')}
                   </h5>
                   <div className="space-y-3">
-                    {entityList.map((entity: any, index: number) => (
-                      <div key={entity.id || index} className="bg-muted/30 p-3 rounded border border-border">
+                    {entityList.map((entity: unknown, index: number) => { const entityObj = typeof entity === "object" && entity !== null ? entity as Record<string, unknown> : {}; return (
+                      <div key={String(entityObj.id) || index} className="bg-muted/30 p-3 rounded border border-border">
                         <div className="mb-2">
                           <span className="text-xs font-semibold text-foreground">
-                            {entity.id || `實體 ${index + 1}`}
+                            {String(entityObj.id) || `實體 ${index + 1}`}
                           </span>
-                          {entity._comment && (
-                            <p className="text-xs text-muted-foreground mt-1">{entity._comment}</p>
+                          {String(entityObj._comment) && (
+                            <p className="text-xs text-muted-foreground mt-1">{String(entityObj._comment || "")}</p>
                           )}
                         </div>
                         
-                        {entity.keywords && Array.isArray(entity.keywords) && entity.keywords.length > 0 && (
+                        {String(entityObj.keywords) && Array.isArray(entityObj.keywords) && entityObj.keywords.length > 0 && (
                           <div>
                             <p className="text-xs font-semibold text-muted-foreground mb-1.5">關鍵詞：</p>
                             <div className="flex flex-wrap gap-1.5">
-                              {entity.keywords.map((keyword: string, kwIndex: number) => (
+                              {entityObj.keywords.map((keyword: string, kwIndex: number) => (
                                 <span key={kwIndex} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-200">
                                   {keyword}
                                 </span>
@@ -350,8 +362,7 @@ function renderAIConfig(data: any) {
                     ))}
                   </div>
                 </div>
-              )
-            })}
+              )})}
           </div>
         </div>
       )}
@@ -359,13 +370,18 @@ function renderAIConfig(data: any) {
   )
 }
 
-function renderTemplates(data: any) {
+function renderTemplates(data: unknown) {
+  if (!data || typeof data !== 'object') {
+    return <EmptyState message="暫無資料" icon="file" />
+  }
+  
+  const dataObj = data as Record<string, unknown>
   if (!data) {
     return <EmptyState message="暫無範本" icon="file" />
   }
   
-  const templates = data.templates 
-    ? (Array.isArray(data.templates) ? data.templates : Object.entries(data.templates))
+  const templates = dataObj.templates 
+    ? (Array.isArray(dataObj.templates) ? dataObj.templates : Object.entries(dataObj.templates))
     : []
   
   if (!templates || templates.length === 0) {
@@ -374,7 +390,7 @@ function renderTemplates(data: any) {
   
   return (
     <div className="space-y-3">
-      {templates.map((template: any, index: number) => {
+      {templates.map((template: unknown, index: number) => {
         const [key, value] = Array.isArray(template) ? template : [index, template]
         const templateData = value || template
         const templateKey = typeof key === 'string' ? key : `範本 ${index + 1}`
@@ -382,19 +398,19 @@ function renderTemplates(data: any) {
         return (
           <div key={index} className="bg-background p-4 rounded-lg border border-border">
             <h4 className="font-semibold text-foreground mb-2 text-base">{templateKey}</h4>
-            {templateData.main_answer && (
+            {String(templateData.main_answer) && (
               <div className="mb-2">
                 <p className="text-xs font-semibold text-muted-foreground mb-1">主要回答：</p>
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{templateData.main_answer}</p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{String(templateData.main_answer || "")}</p>
               </div>
             )}
-            {templateData.supplementary_info && (
+            {String(templateData.supplementary_info) && (
               <div className="mb-2">
                 <p className="text-xs font-semibold text-muted-foreground mb-1">補充資訊：</p>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{templateData.supplementary_info}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{String(templateData.supplementary_info || "")}</p>
               </div>
             )}
-            {templateData.next_best_actions && Array.isArray(templateData.next_best_actions) && templateData.next_best_actions.length > 0 && (
+            {String(templateData.next_best_actions) && Array.isArray(templateData.next_best_actions) && templateData.next_best_actions.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-muted-foreground mb-1">下一步行动：</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -407,13 +423,17 @@ function renderTemplates(data: any) {
               </div>
             )}
           </div>
-        )
-      })}
+        )})}
     </div>
   )
 }
 
-function renderJSON(data: any) {
+function renderJSON(data: unknown) {
+  if (!data || typeof data !== 'object') {
+    return <EmptyState message="暫無資料" icon="file" />
+  }
+  
+  const dataObj = data as Record<string, unknown>
   if (!data) {
     return <EmptyState message="暫無資料" icon="file" />
   }

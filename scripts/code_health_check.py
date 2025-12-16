@@ -32,8 +32,8 @@ class CodeHealthChecker:
             'summary': {}
         }
         
-    def run_command(self, cmd: List[str], cwd: str = None, timeout: int = 60) -> Tuple[int, str, str]:
-        """运行命令并返回结果"""
+    def run_command(self, cmd: List[str], cwd: str = None, timeout: int = 300) -> Tuple[int, str, str]:
+        """运行命令并返回结果（完整检查模式，允许更长时间）"""
         try:
             result = subprocess.run(
                 cmd,
@@ -51,7 +51,7 @@ class CodeHealthChecker:
     def check_typescript(self):
         """检查 TypeScript 编译错误"""
         print("🔍 检查 TypeScript 编译错误...")
-        returncode, stdout, stderr = self.run_command(['npx', 'tsc', '--noEmit', '--pretty', 'false'], timeout=30)
+        returncode, stdout, stderr = self.run_command(['npx', 'tsc', '--noEmit', '--pretty', 'false'], timeout=120)
         
         errors = []
         warnings = []
@@ -82,9 +82,8 @@ class CodeHealthChecker:
         returncode, stdout, stderr = self.run_command([
             'npx', 'eslint', 
             '--format', 'json',
-            '--max-warnings', '0',
             'app', 'lib', 'components', 'types'
-        ], timeout=30)
+        ], timeout=120)
         
         issues = []
         error_count = 0
@@ -181,7 +180,7 @@ class CodeHealthChecker:
             'npx', 'ts-prune',
             '--ignore', 'node_modules',
             '--ignore', '.next'
-        ], timeout=30)
+        ], timeout=60)
         
         dead_code_issues = []
         if stdout:
@@ -215,7 +214,7 @@ class CodeHealthChecker:
         """使用 depcheck 检查依赖健康"""
         print("🔍 检查依赖健康 (depcheck)...")
         
-        returncode, stdout, stderr = self.run_command(['npx', 'depcheck', '--json'], timeout=20)
+        returncode, stdout, stderr = self.run_command(['npx', 'depcheck', '--json'], timeout=60)
         
         unused_deps = []
         missing_deps = []
@@ -297,21 +296,14 @@ class CodeHealthChecker:
         source_dirs = ['app', 'lib', 'components', 'types']
         files_analyzed = []
         issues = []
-        max_files = 100  # 限制分析文件数量以提高速度
         
         for dir_name in source_dirs:
-            if len(files_analyzed) >= max_files:
-                break
             dir_path = self.project_root / dir_name
             if not dir_path.exists():
                 continue
                 
             for ext in ['ts', 'tsx']:
-                if len(files_analyzed) >= max_files:
-                    break
                 for file_path in dir_path.rglob(f'*.{ext}'):
-                    if len(files_analyzed) >= max_files:
-                        break
                     if 'node_modules' in str(file_path) or '.next' in str(file_path) or '__tests__' in str(file_path):
                         continue
                     
@@ -396,13 +388,23 @@ class CodeHealthChecker:
         dependencies = package_data.get('dependencies', {})
         dev_dependencies = package_data.get('devDependencies', {})
         
-        # 跳过过时依赖检查（太慢）
+        # 检查过时的依赖
         outdated = []
+        try:
+            returncode, stdout, _ = self.run_command(['npm', 'outdated', '--json'], timeout=60)
+            if returncode == 0 and stdout:
+                try:
+                    outdated_data = json.loads(stdout)
+                    outdated = list(outdated_data.keys())
+                except:
+                    pass
+        except:
+            pass
         
-        # 检查安全漏洞（快速模式）
+        # 检查安全漏洞
         vulnerabilities = []
         try:
-            returncode, stdout, _ = self.run_command(['npm', 'audit', '--json', '--audit-level=moderate'], timeout=15)
+            returncode, stdout, _ = self.run_command(['npm', 'audit', '--json'], timeout=60)
             if returncode != 0 and stdout:
                 try:
                     audit_data = json.loads(stdout)
@@ -491,10 +493,10 @@ class CodeHealthChecker:
         }
     
     def check_test_coverage(self):
-        """检查测试覆盖率（不运行测试，只统计文件）"""
+        """检查测试覆盖率和运行测试"""
         print("🔍 检查测试覆盖率...")
         
-        # 查找所有测试文件，不运行测试（运行太慢）
+        # 查找所有测试文件
         test_files = []
         test_dirs = [
             self.project_root / 'lib' / '__tests__',
@@ -512,10 +514,30 @@ class CodeHealthChecker:
         test_files = list(set(test_files))
         test_count = len(test_files)
         
+        # 运行测试获取覆盖率
+        test_status = 'unknown'
+        coverage_data = {}
+        try:
+            returncode, stdout, stderr = self.run_command(['npm', 'test', '--', '--passWithNoTests', '--coverage', '--json'], timeout=120)
+            if returncode == 0:
+                test_status = 'pass'
+            else:
+                test_status = 'fail'
+            
+            # 尝试解析覆盖率数据
+            if stdout:
+                try:
+                    coverage_data = json.loads(stdout)
+                except:
+                    pass
+        except:
+            pass
+        
         self.results['code_quality']['testing'] = {
             'test_files_count': test_count,
-            'test_status': 'unknown',  # 不运行测试，只统计
-            'test_files': [str(f.relative_to(self.project_root)) for f in test_files[:20]]
+            'test_status': test_status,
+            'test_files': [str(f.relative_to(self.project_root)) for f in test_files],
+            'coverage': coverage_data
         }
     
     def generate_summary(self):
@@ -836,30 +858,197 @@ class CodeHealthChecker:
                 md.append(f"- `{test_file}`")
             md.append("")
         
-        # 建议
-        md.append("## 💡 改进建议")
+        # 详细改进建议和步骤
+        md.append("## 💡 改进建议与行动计划")
         md.append("")
         
         suggestions = []
-        if ts_result.get('error_count', 0) > 0:
-            suggestions.append("修复所有 TypeScript 编译错误")
-        if eslint_result.get('issue_count', 0) > 0:
-            suggestions.append("修复 ESLint 代码风格问题")
-        if deps.get('vulnerabilities_count', 0) > 0:
-            suggestions.append("更新有安全漏洞的依赖包")
-        if unused_imports.get('count', 0) > 0:
-            suggestions.append("清理未使用的导入")
-        if cq.get('complex_files_count', 0) > 0:
-            suggestions.append("重构复杂度过高的文件，提高可维护性")
-        if sec.get('hardcoded_secrets_count', 0) > 0:
-            suggestions.append("移除硬编码的敏感信息，使用环境变量")
-        if testing.get('test_files_count', 0) < 5:
-            suggestions.append("增加测试覆盖率，提高代码质量")
+        action_plans = []
         
+        # P0: 严重问题
+        if ts_result.get('error_count', 0) > 0:
+            suggestions.append("🔴 **P0 - 紧急**: 修复所有 TypeScript 编译错误")
+            action_plans.append({
+                'priority': 'P0',
+                'title': '修复 TypeScript 编译错误',
+                'count': ts_result.get('error_count', 0),
+                'steps': [
+                    '运行 `npm run type-check` 查看所有错误',
+                    '逐个修复类型错误',
+                    '优先修复影响构建的错误',
+                    '验证修复后运行 `npm run build` 确保构建成功'
+                ],
+                'estimated_time': f"{ts_result.get('error_count', 0) * 5} 分钟"
+            })
+        
+        if eslint_result.get('error_count', 0) > 0:
+            suggestions.append("🔴 **P0 - 紧急**: 修复 ESLint 错误")
+            action_plans.append({
+                'priority': 'P0',
+                'title': '修复 ESLint 错误',
+                'count': eslint_result.get('error_count', 0),
+                'steps': [
+                    '运行 `npm run lint` 查看所有错误',
+                    '优先修复 React Hooks 规则错误（可能导致运行时问题）',
+                    '修复 `@typescript-eslint/no-explicit-any` 错误（类型安全）',
+                    '修复 `@typescript-eslint/no-unused-vars` 错误（清理代码）',
+                    '使用 `npm run lint -- --fix` 自动修复可修复的问题',
+                    '验证修复后运行 `npm run build`'
+                ],
+                'estimated_time': f"{eslint_result.get('error_count', 0) * 3} 分钟"
+            })
+        
+        if sec.get('hardcoded_secrets_count', 0) > 0:
+            suggestions.append("🔴 **P0 - 紧急**: 移除硬编码的敏感信息")
+            action_plans.append({
+                'priority': 'P0',
+                'title': '移除硬编码敏感信息',
+                'count': sec.get('hardcoded_secrets_count', 0),
+                'steps': [
+                    '检查报告中的安全问题列表',
+                    '将所有硬编码的密钥、密码、API Key 移到环境变量',
+                    '更新 `.env.local` 和 `.env.example`',
+                    '确保 `.env.local` 在 `.gitignore` 中',
+                    '验证代码中通过 `process.env` 读取环境变量'
+                ],
+                'estimated_time': f"{sec.get('hardcoded_secrets_count', 0) * 10} 分钟"
+            })
+        
+        # P1: 重要问题
+        if deps.get('vulnerabilities_count', 0) > 0:
+            suggestions.append("🟠 **P1 - 重要**: 更新有安全漏洞的依赖包")
+            action_plans.append({
+                'priority': 'P1',
+                'title': '更新安全漏洞依赖',
+                'count': deps.get('vulnerabilities_count', 0),
+                'steps': [
+                    '运行 `npm audit` 查看详细漏洞信息',
+                    '运行 `npm audit fix` 自动修复可修复的漏洞',
+                    '对于需要手动更新的包，检查 breaking changes',
+                    '更新后运行 `npm test` 确保测试通过',
+                    '更新后运行 `npm run build` 确保构建成功'
+                ],
+                'estimated_time': '30-60 分钟'
+            })
+        
+        if unused_imports.get('count', 0) > 0:
+            suggestions.append("🟡 **P1 - 重要**: 清理未使用的导入")
+            action_plans.append({
+                'priority': 'P1',
+                'title': '清理未使用的导入',
+                'count': unused_imports.get('count', 0),
+                'steps': [
+                    '使用 IDE 的自动清理功能（如 VS Code 的 Organize Imports）',
+                    '或手动检查报告中的未使用导入列表',
+                    '逐个文件清理未使用的导入',
+                    '运行 `npm run type-check` 验证清理后无错误'
+                ],
+                'estimated_time': f"{unused_imports.get('count', 0) * 1} 分钟"
+            })
+        
+        # P2: 优化建议
+        if cq.get('complex_files_count', 0) > 0:
+            suggestions.append("🟢 **P2 - 优化**: 重构复杂度过高的文件")
+            complex_files = cq.get('complex_files', [])
+            action_plans.append({
+                'priority': 'P2',
+                'title': '重构复杂文件',
+                'count': cq.get('complex_files_count', 0),
+                'steps': [
+                    '优先重构复杂度 > 50 的文件',
+                    '将大函数拆分为多个小函数',
+                    '提取重复逻辑为工具函数',
+                    '使用设计模式简化复杂逻辑',
+                    '添加单元测试确保重构后功能不变'
+                ],
+                'estimated_time': f"{cq.get('complex_files_count', 0) * 30} 分钟",
+                'files': [f['path'] for f in complex_files[:10]]
+            })
+        
+        dead_code_count = self.results.get('dead_code', {}).get('issue_count', 0)
+        if dead_code_count > 0:
+            suggestions.append("🟢 **P2 - 优化**: 清理死代码")
+            action_plans.append({
+                'priority': 'P2',
+                'title': '清理死代码',
+                'count': dead_code_count,
+                'steps': [
+                    '检查报告中的未使用导出列表',
+                    '确认这些导出确实未被使用（检查是否被动态导入）',
+                    '删除确认未使用的导出',
+                    '注意：某些导出可能是为了未来使用，需谨慎删除'
+                ],
+                'estimated_time': f"{min(dead_code_count, 50) * 2} 分钟"
+            })
+        
+        unused_deps = self.results.get('dependency_health', {}).get('unused_count', 0)
+        if unused_deps > 0:
+            suggestions.append("🟢 **P2 - 优化**: 移除未使用的依赖")
+            action_plans.append({
+                'priority': 'P2',
+                'title': '移除未使用的依赖',
+                'count': unused_deps,
+                'steps': [
+                    '检查报告中的未使用依赖列表',
+                    '确认这些依赖确实未被使用',
+                    '运行 `npm uninstall <package>` 移除',
+                    '运行 `npm run build` 确保移除后无影响'
+                ],
+                'estimated_time': '10 分钟'
+            })
+        
+        if testing.get('test_files_count', 0) < 10:
+            suggestions.append("🟢 **P2 - 优化**: 增加测试覆盖率")
+            action_plans.append({
+                'priority': 'P2',
+                'title': '增加测试覆盖率',
+                'count': testing.get('test_files_count', 0),
+                'steps': [
+                    '为核心业务逻辑添加单元测试',
+                    '为 API 路由添加集成测试',
+                    '为工具函数添加测试',
+                    '目标：测试覆盖率 > 70%',
+                    '运行 `npm run test:coverage` 查看覆盖率报告'
+                ],
+                'estimated_time': '2-4 小时'
+            })
+        
+        # 输出建议摘要
         if suggestions:
-            for i, suggestion in enumerate(suggestions, 1):
-                md.append(f"{i}. {suggestion}")
-        else:
+            md.append("### 优先级摘要")
+            md.append("")
+            for suggestion in suggestions:
+                md.append(f"- {suggestion}")
+            md.append("")
+        
+        # 输出详细行动计划
+        if action_plans:
+            md.append("### 详细行动计划")
+            md.append("")
+            
+            # 按优先级分组
+            p0_plans = [p for p in action_plans if p['priority'] == 'P0']
+            p1_plans = [p for p in action_plans if p['priority'] == 'P1']
+            p2_plans = [p for p in action_plans if p['priority'] == 'P2']
+            
+            for priority_group, plans in [('P0 - 紧急', p0_plans), ('P1 - 重要', p1_plans), ('P2 - 优化', p2_plans)]:
+                if plans:
+                    md.append(f"#### {priority_group}")
+                    md.append("")
+                    for plan in plans:
+                        md.append(f"**{plan['title']}** ({plan['count']} 个问题)")
+                        md.append("")
+                        md.append(f"- **预计时间**: {plan.get('estimated_time', '未知')}")
+                        md.append("- **执行步骤**:")
+                        for i, step in enumerate(plan['steps'], 1):
+                            md.append(f"  {i}. {step}")
+                        if plan.get('files'):
+                            md.append("- **相关文件**:")
+                            for file_path in plan['files'][:5]:
+                                md.append(f"  - `{file_path}`")
+                        md.append("")
+        
+        if not suggestions:
             md.append("✅ 代码质量良好，无需特别改进")
         
         md.append("")
