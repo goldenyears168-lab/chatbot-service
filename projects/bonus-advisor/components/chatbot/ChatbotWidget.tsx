@@ -42,15 +42,21 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
 
   // 解构 props
   const {
-    companyId,
-    apiEndpoint,
+    companyId = '',
+    apiEndpoint = '',
     pageType = 'home',
     autoOpen = false,
     companyName,
     companyNameEn: _companyNameEn, // 保留以备将来使用（例如多语言支持）
   } = props
 
-  // 验证必需的 props
+  // 所有 hooks 必须在任何早期返回之前调用
+  const [isOpen, setIsOpen] = useState(autoOpen)
+  const [faqMenu, setFaqMenu] = useState<FAQMenu | null>(null)
+  const [uiConfig, setUiConfig] = useState<{ removeMarkdownBold?: boolean }>({ removeMarkdownBold: true })
+  const sessionIdRef = useRef<string>(generateSessionId(companyId))
+  
+  // 验证必需的 props（在 hooks 之后）
   if (!companyId || !apiEndpoint) {
     console.error('ChatbotWidget: Missing required props', { companyId, apiEndpoint })
     return (
@@ -64,10 +70,6 @@ export function ChatbotWidget(props: ChatbotWidgetProps) {
       </div>
     )
   }
-  const [isOpen, setIsOpen] = useState(autoOpen)
-  const [faqMenu, setFaqMenu] = useState<FAQMenu | null>(null)
-  const [uiConfig, setUiConfig] = useState<{ removeMarkdownBold?: boolean }>({ removeMarkdownBold: true })
-  const sessionIdRef = useRef<string>(generateSessionId(companyId))
   
   // 使用 useChat hook 处理流式响应
   const chat = useChat({

@@ -88,7 +88,7 @@ export function memoize<T extends (...args: unknown[]) => unknown>(
       return cached.value
     }
     
-    const result = func(...args)
+    const result = func(...args) as ReturnType<T>
     cache.set(key, {
       value: result,
       expiry: Date.now() + ttl,

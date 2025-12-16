@@ -98,8 +98,12 @@ function extractSchema(data: unknown, prefix = '', assetData: unknown): SchemaFi
     
     // Get description from _field_description if available
     let description = ''
-    if (data._field_description && data._field_description[key]) {
-      description = String(data._field_description[key])
+    const dataObj = data as Record<string, unknown>
+    if (dataObj._field_description && typeof dataObj._field_description === 'object' && dataObj._field_description !== null) {
+      const fieldDesc = dataObj._field_description as Record<string, unknown>
+      if (fieldDesc[key]) {
+        description = String(fieldDesc[key])
+      }
     }
     
     // Get example value
@@ -134,11 +138,7 @@ export function AssetSchema({ assetData }: AssetSchemaProps) {
   const [copiedPathIndex, setCopiedPathIndex] = useState<number | null>(null)
   const { toast } = useToast()
   
-  if (!assetData) {
-    return <EmptyState message="暫無 Schema 資料" icon="file" />
-  }
-  
-  const allSchema = extractSchema(assetData, '', assetData)
+  const allSchema = assetData ? extractSchema(assetData, '', assetData) : []
   
   // Filter schema based on search term
   const filteredSchema = useMemo(() => {
@@ -152,6 +152,10 @@ export function AssetSchema({ assetData }: AssetSchemaProps) {
         (field.example && field.example.toLowerCase().includes(lowerSearch))
     )
   }, [allSchema, searchTerm])
+  
+  if (!assetData) {
+    return <EmptyState message="暫無 Schema 資料" icon="file" />
+  }
   
   if (allSchema.length === 0) {
     return <EmptyState message="無法提取 Schema" icon="file" />

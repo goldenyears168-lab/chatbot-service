@@ -107,9 +107,11 @@ function retrieveRelevantChunks(
     knowledgeBase['knowledgeBase'] ||
     {}
   
-  const retrieval = knowledgeBaseData.retrieval
+  const knowledgeBaseDataObj = typeof knowledgeBaseData === 'object' && knowledgeBaseData !== null ? knowledgeBaseData as Record<string, unknown> : {}
+  const retrieval = knowledgeBaseDataObj.retrieval
   
-  if (!retrieval || !retrieval.chunks || !Array.isArray(retrieval.chunks)) {
+  const retrievalObj = retrieval && typeof retrieval === 'object' && retrieval !== null ? retrieval as Record<string, unknown> : {}
+  if (!retrievalObj.chunks || !Array.isArray(retrievalObj.chunks)) {
     logger.debug('No retrieval chunks found in knowledge base', {
       hasKnowledgeBaseData: !!knowledgeBaseData,
       hasRetrieval: !!retrieval,
@@ -128,13 +130,14 @@ function retrieveRelevantChunks(
   // 方法1: 通过 q_triggers 匹配（精确匹配）
   const matchedChunkIds = new Set<string>()
   
-  for (const chunk of retrieval.chunks) {
-    if (chunk.q_triggers && Array.isArray(chunk.q_triggers)) {
-      for (const trigger of chunk.q_triggers) {
-        if (messageLower.includes(trigger.toLowerCase())) {
-          const chunkText = `【${chunk.title || chunk.chunk_id}】\n${chunk.content}`
+  for (const chunk of retrievalObj.chunks as unknown[]) {
+    const chunkObj = typeof chunk === 'object' && chunk !== null ? chunk as Record<string, unknown> : {}
+    if (chunkObj.q_triggers && Array.isArray(chunkObj.q_triggers)) {
+      for (const trigger of chunkObj.q_triggers) {
+        if (messageLower.includes(String(trigger).toLowerCase())) {
+          const chunkText = `【${String(chunkObj.title || chunkObj.chunk_id || '')}】\n${String(chunkObj.content || '')}`
           relevantChunks.push(chunkText)
-          matchedChunkIds.add(chunk.chunk_id || chunk.title || '')
+          matchedChunkIds.add(String(chunkObj.chunk_id || chunkObj.title || ''))
           break // 找到匹配就跳出，避免重复
         }
       }
@@ -142,25 +145,27 @@ function retrieveRelevantChunks(
   }
 
   // 方法2: 通过 tags 和 aliases 匹配（如果方法1没找到足够内容）
-  if (relevantChunks.length === 0 && retrieval.aliases) {
-    for (const [key, aliases] of Object.entries(retrieval.aliases)) {
-      const allKeywords = [key, ...(aliases as string[])]
+  if (relevantChunks.length === 0 && retrievalObj.aliases) {
+    const aliasesObj = retrievalObj.aliases as Record<string, unknown>
+    for (const [key, aliases] of Object.entries(aliasesObj)) {
+      const allKeywords = [key, ...(Array.isArray(aliases) ? aliases as string[] : [])]
       for (const keyword of allKeywords) {
         if (messageLower.includes(keyword.toLowerCase())) {
           // 找到包含相关 tag 的 chunks
-          for (const chunk of retrieval.chunks) {
-            if (chunk.tags && Array.isArray(chunk.tags)) {
-              const hasMatchingTag = chunk.tags.some((tag: unknown) => {
+          for (const chunk of retrievalObj.chunks as unknown[]) {
+            const chunkObj = typeof chunk === 'object' && chunk !== null ? chunk as Record<string, unknown> : {}
+            if (chunkObj.tags && Array.isArray(chunkObj.tags)) {
+              const hasMatchingTag = chunkObj.tags.some((tag: unknown) => {
                 const tagLower = String(tag).toLowerCase()
                 const keyLower = key.toLowerCase()
                 return tagLower.includes(keyLower) || keyLower.includes(tagLower)
               })
               
-              if (hasMatchingTag && !matchedChunkIds.has(chunk.chunk_id || chunk.title || '')) {
+              if (hasMatchingTag && !matchedChunkIds.has(String(chunkObj.chunk_id || chunkObj.title || ''))) {
                 relevantChunks.push(
-                  `【${chunk.title || chunk.chunk_id}】\n${chunk.content}`
+                  `【${String(chunkObj.title || chunkObj.chunk_id || '')}】\n${String(chunkObj.content || '')}`
                 )
-                matchedChunkIds.add(chunk.chunk_id || chunk.title || '')
+                matchedChunkIds.add(String(chunkObj.chunk_id || chunkObj.title || ''))
               }
             }
           }
@@ -171,16 +176,17 @@ function retrieveRelevantChunks(
   }
 
   // 方法3: 通过 tags 直接匹配（如果前两种方法都没找到）
-  if (relevantChunks.length === 0 && retrieval.tags) {
-    for (const tag of retrieval.tags) {
+  if (relevantChunks.length === 0 && retrievalObj.tags && Array.isArray(retrievalObj.tags)) {
+    for (const tag of retrievalObj.tags) {
       if (messageLower.includes(String(tag).toLowerCase())) {
-        for (const chunk of retrieval.chunks) {
-          if (chunk.tags && Array.isArray(chunk.tags) && chunk.tags.includes(tag)) {
-            if (!matchedChunkIds.has(chunk.chunk_id || chunk.title || '')) {
+        for (const chunk of retrievalObj.chunks as unknown[]) {
+          const chunkObj = typeof chunk === 'object' && chunk !== null ? chunk as Record<string, unknown> : {}
+          if (chunkObj.tags && Array.isArray(chunkObj.tags) && chunkObj.tags.includes(tag)) {
+            if (!matchedChunkIds.has(String(chunkObj.chunk_id || chunkObj.title || ''))) {
               relevantChunks.push(
-                `【${chunk.title || chunk.chunk_id}】\n${chunk.content}`
+                `【${String(chunkObj.title || chunkObj.chunk_id || '')}】\n${String(chunkObj.content || '')}`
               )
-              matchedChunkIds.add(chunk.chunk_id || chunk.title || '')
+              matchedChunkIds.add(String(chunkObj.chunk_id || chunkObj.title || ''))
             }
           }
         }
@@ -219,7 +225,16 @@ export async function loadKnowledgeContext(
     knowledgeBase['knowledgeBase'] ||
     {}
 
-  const personaName = personas.persona?.name || aiConfig.persona?.name || '公司'
+  const aiConfigObj = typeof aiConfig === 'object' && aiConfig !== null ? aiConfig as Record<string, unknown> : {}
+  const personasObj = typeof personas === 'object' && personas !== null ? personas as Record<string, unknown> : {}
+  const companyInfoObj = typeof companyInfo === 'object' && companyInfo !== null ? companyInfo as Record<string, unknown> : {}
+  const knowledgeBaseDataObj = typeof knowledgeBaseData === 'object' && knowledgeBaseData !== null ? knowledgeBaseData as Record<string, unknown> : {}
+  
+  const personaObj = personasObj.persona && typeof personasObj.persona === 'object' && personasObj.persona !== null ? personasObj.persona as Record<string, unknown> : {}
+  const aiConfigPersonaObj = aiConfigObj.persona && typeof aiConfigObj.persona === 'object' && aiConfigObj.persona !== null ? aiConfigObj.persona as Record<string, unknown> : {}
+  const personaName = (personaObj.name && typeof personaObj.name === 'string' ? personaObj.name : null) || 
+                      (aiConfigPersonaObj.name && typeof aiConfigPersonaObj.name === 'string' ? aiConfigPersonaObj.name : null) || 
+                      '公司'
 
   // 构建基础 system prompt
   let systemPrompt = `你是一个专业的 AI 客服助手，为 ${personaName} 提供服务。
@@ -227,9 +242,9 @@ export async function loadKnowledgeContext(
 公司信息：
 ${JSON.stringify(services, null, 2)}
 
-${companyInfo.contact ? `联系方式：${JSON.stringify(companyInfo.contact, null, 2)}` : ''}
+${companyInfoObj.contact ? `联系方式：${JSON.stringify(companyInfoObj.contact, null, 2)}` : ''}
 
-${aiConfig.instructions ? `特殊指示：${aiConfig.instructions}` : ''}`
+${aiConfigObj.instructions ? `特殊指示：${aiConfigObj.instructions}` : ''}`
 
   // 如果提供了用户消息，进行知识检索
   if (userMessage && userMessage.trim()) {
@@ -247,36 +262,39 @@ ${aiConfig.instructions ? `特殊指示：${aiConfig.instructions}` : ''}`
       })
     } else {
       // 如果没有找到相关 chunks，可以包含完整的知识库结构（作为后备）
-      if (knowledgeBaseData.entities || knowledgeBaseData.examples) {
+      if (knowledgeBaseDataObj.entities || knowledgeBaseDataObj.examples) {
         systemPrompt += `\n\n知识库结构：\n${JSON.stringify({
-          entities: knowledgeBaseData.entities,
-          examples: knowledgeBaseData.examples
+          entities: knowledgeBaseDataObj.entities,
+          examples: knowledgeBaseDataObj.examples
         }, null, 2)}`
         
         logger.debug('No relevant chunks found, using full knowledge base structure', {
           company,
-          hasEntities: !!knowledgeBaseData.entities,
-          hasExamples: !!knowledgeBaseData.examples,
+          hasEntities: !!knowledgeBaseDataObj.entities,
+          hasExamples: !!knowledgeBaseDataObj.examples,
         })
       }
     }
   } else {
     // 没有用户消息时，包含完整的知识库（向后兼容）
-    if (knowledgeBaseData.entities || knowledgeBaseData.examples) {
+    if (knowledgeBaseDataObj.entities || knowledgeBaseDataObj.examples) {
       systemPrompt += `\n\n知识库结构：\n${JSON.stringify({
-        entities: knowledgeBaseData.entities,
-        examples: knowledgeBaseData.examples
+        entities: knowledgeBaseDataObj.entities,
+        examples: knowledgeBaseDataObj.examples
       }, null, 2)}`
     }
   }
 
   systemPrompt += `\n\n请根据以上信息，友好、专业地回答用户的问题。如果问题超出你的知识范围，请礼貌地引导用户联系人工客服。`
 
+  const responseTemplates = knowledgeBase.responseTemplates || knowledgeBase.response_templates || {}
+  const uiConfigValue = aiConfigObj.ui || {}
+
   return {
     systemPrompt,
     knowledgeBase,
-    uiConfig: aiConfig.ui || {},
-    responseTemplates: knowledgeBase.responseTemplates || knowledgeBase.response_templates || {},
+    uiConfig: uiConfigValue,
+    responseTemplates,
   }
 }
 

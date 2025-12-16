@@ -157,9 +157,11 @@ export function JsonDiffViewer({ prev, next, className }: JsonDiffViewerProps) {
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
           {changes.map((change, index) => {
             const isExpanded = expandedPaths.has(change.path)
-            const hasComplexValue = 
+            const hasComplexValue: boolean = 
               (change.before && typeof change.before === 'object') ||
               (change.after && typeof change.after === 'object')
+                ? true
+                : false
 
             return (
               <div
@@ -270,12 +272,14 @@ export function JsonDiffViewer({ prev, next, className }: JsonDiffViewerProps) {
                     {isExpanded && hasComplexValue && (
                       <div className="mt-2 p-2 bg-muted rounded text-xs font-mono overflow-x-auto">
                         <pre className="whitespace-pre-wrap">
-                          {change.type === 'removed' 
-                            ? JSON.stringify(change.before, null, 2)
-                            : change.type === 'added'
-                            ? JSON.stringify(change.after, null, 2)
-                            : `Before:\n${JSON.stringify(change.before, null, 2)}\n\nAfter:\n${JSON.stringify(change.after, null, 2)}`
-                          }
+                          {(() => {
+                            const content = change.type === 'removed' 
+                              ? JSON.stringify(change.before, null, 2)
+                              : change.type === 'added'
+                              ? JSON.stringify(change.after, null, 2)
+                              : `Before:\n${JSON.stringify(change.before, null, 2)}\n\nAfter:\n${JSON.stringify(change.after, null, 2)}`
+                            return String(content ?? '')
+                          })()}
                         </pre>
                       </div>
                     )}
