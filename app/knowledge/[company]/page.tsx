@@ -51,7 +51,7 @@ async function loadKnowledgeDataViaApi(company: string, baseUrl: string): Promis
   if (!baseUrl) {
     throw new Error(
       'Base URL is required. Please set NEXT_PUBLIC_BASE_URL environment variable ' +
-      'in Cloudflare Pages Settings → Environment variables → Production/Preview.'
+      'in Vercel Dashboard → Settings → Environment Variables.'
     )
   }
   
@@ -74,7 +74,7 @@ async function loadKnowledgeDataViaApi(company: string, baseUrl: string): Promis
   return response.json()
 }
 
-// 使用 Edge Runtime（Cloudflare Pages 要求）
+// 使用 Edge Runtime（支持 Vercel 和 Cloudflare Pages）
 export const runtime = 'edge'
 
 export default async function KnowledgePage({ params }: KnowledgePageProps) {
