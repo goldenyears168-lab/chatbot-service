@@ -18,17 +18,24 @@ async function getBaseUrl(): Promise<string> {
     return process.env.NEXT_PUBLIC_BASE_URL
   }
   
-  // 在 Edge Runtime 中，从请求头中获取 baseUrl
+  // 在 Edge Runtime 中，尝试从请求头中获取 baseUrl
   try {
     const headersList = await headers()
-    const host = headersList.get('host') || headersList.get('x-forwarded-host')
-    const protocol = headersList.get('x-forwarded-proto') || 'https'
+    const host = headersList.get('host') || 
+                  headersList.get('x-forwarded-host') ||
+                  headersList.get('cf-connecting-ip') // Cloudflare specific
     
     if (host) {
-      return `${protocol}://${host}`
+      // 移除端口号（如果有）
+      const hostWithoutPort = host.split(':')[0]
+      const protocol = headersList.get('x-forwarded-proto') || 
+                       (headersList.get('x-forwarded-ssl') === 'on' ? 'https' : 'https') ||
+                       'https'
+      return `${protocol}://${hostWithoutPort}`
     }
   } catch (error) {
-    // 如果无法获取 headers，继续使用默认值
+    // 如果无法获取 headers，记录错误但继续
+    console.warn('Failed to get baseUrl from headers:', error)
   }
   
   // 开发环境默认值
@@ -36,11 +43,13 @@ async function getBaseUrl(): Promise<string> {
     return 'http://localhost:3000'
   }
   
-  // 生产环境如果没有设置，抛出错误
-  throw new Error(
-    'NEXT_PUBLIC_BASE_URL environment variable is required in production. ' +
-    'Please set it in Cloudflare Pages environment variables.'
-  )
+  // 生产环境：尝试使用当前请求的 URL（如果可用）
+  // 注意：在 Edge Runtime 的页面组件中，我们无法直接访问 request
+  // 所以这里返回一个占位符，loadKnowledgeData 会处理错误
+  
+  // 如果所有方法都失败，返回空字符串，让调用方处理
+  console.error('Warning: Unable to determine baseUrl. Some features may not work correctly.')
+  return ''
 }
 
 // 使用 Edge Runtime（Cloudflare Pages 要求）
@@ -61,6 +70,14 @@ export default async function KnowledgePage({ params }: KnowledgePageProps) {
   let error: string | null = null
   
   try {
+    // 检查 baseUrl 是否有效
+    if (!baseUrl) {
+      throw new Error(
+        'Base URL is not available. Please set NEXT_PUBLIC_BASE_URL environment variable ' +
+        'in Cloudflare Pages Settings → Environment variables.'
+      )
+    }
+    
     // 直接使用共享的加载函数，而不是通过 HTTP fetch
     [knowledgeData, companyConfig] = await Promise.all([
       loadKnowledgeData(company, baseUrl),

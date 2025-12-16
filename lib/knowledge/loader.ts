@@ -125,6 +125,10 @@ export async function loadKnowledgeData(
   if (!company) {
     throw new Error('Company ID is required')
   }
+  
+  if (!baseUrl) {
+    throw new Error('Base URL is required. Please set NEXT_PUBLIC_BASE_URL environment variable in Cloudflare Pages settings.')
+  }
 
   // 从 public 目录读取清单文件
   const manifestUrl = `${baseUrl}/projects/${company}/knowledge/_manifest.json`
