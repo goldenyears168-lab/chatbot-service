@@ -169,19 +169,26 @@ function renderCompanyInfo(data: unknown) {
         </div>
       )}
       
-      {((dataObj.contact_channels !== undefined && dataObj.contact_channels !== null) || (dataObj.contact !== undefined && dataObj.contact !== null)) && (
-        <div>
-          <h4 className="font-semibold text-foreground mb-3 text-base">聯絡方式</h4>
-          <div className="bg-background p-4 rounded-lg border border-border">
-            {dataObj.contact_channels && typeof dataObj.contact_channels === 'object' && dataObj.contact_channels !== null && 'email' in dataObj.contact_channels && (
-              <p className="text-sm text-muted-foreground mb-1.5">Email: {String((dataObj.contact_channels as Record<string, unknown>).email || '')}</p>
-            )}
-            {dataObj.contact_channels && typeof dataObj.contact_channels === 'object' && dataObj.contact_channels !== null && 'phone' in dataObj.contact_channels && (
-              <p className="text-sm text-muted-foreground">電話: {String((dataObj.contact_channels as Record<string, unknown>).phone || '')}</p>
-            )}
+      {(() => {
+        const hasContact = (dataObj.contact_channels !== undefined && dataObj.contact_channels !== null) || (dataObj.contact !== undefined && dataObj.contact !== null)
+        if (!hasContact) return null
+        
+        const contactChannels = dataObj.contact_channels && typeof dataObj.contact_channels === 'object' && dataObj.contact_channels !== null ? dataObj.contact_channels as Record<string, unknown> : null
+        
+        return (
+          <div>
+            <h4 className="font-semibold text-foreground mb-3 text-base">聯絡方式</h4>
+            <div className="bg-background p-4 rounded-lg border border-border">
+              {contactChannels && 'email' in contactChannels ? (
+                <p className="text-sm text-muted-foreground mb-1.5">Email: {String(contactChannels.email || '')}</p>
+              ) : null}
+              {contactChannels && 'phone' in contactChannels ? (
+                <p className="text-sm text-muted-foreground">電話: {String(contactChannels.phone || '')}</p>
+              ) : null}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }
@@ -193,11 +200,12 @@ function renderFAQ(data: unknown) {
   
   const dataObj = data as Record<string, unknown>
   
-  if (!dataObj.categories || typeof dataObj.categories !== 'object') {
+  if (!dataObj.categories || typeof dataObj.categories !== 'object' || dataObj.categories === null) {
     return <EmptyState message="暫無 FAQ 資料" icon="file" />
   }
   
-  const categories = Object.keys(dataObj.categories)
+  const categoriesObj = dataObj.categories as Record<string, unknown>
+  const categories = Object.keys(categoriesObj)
   
   if (categories.length === 0) {
     return <EmptyState message="暫無 FAQ 資料" icon="file" />
@@ -206,12 +214,12 @@ function renderFAQ(data: unknown) {
   return (
     <div className="space-y-4">
       {categories.map((catKey: string) => {
-        const category = dataObj.categories[catKey]
-        const questions = category?.questions || []
+        const category = categoriesObj[catKey] as Record<string, unknown> | undefined
+        const questions = (category && typeof category === 'object' && 'questions' in category && Array.isArray(category.questions)) ? category.questions : []
         
         return (
           <div key={catKey} className="bg-background p-4 rounded-lg border border-border">
-            <h4 className="font-semibold text-foreground mb-3 text-base">{category?.title || catKey}</h4>
+            <h4 className="font-semibold text-foreground mb-3 text-base">{category && typeof category === 'object' && 'title' in category ? String(category.title) : catKey}</h4>
             <div className="space-y-3">
               {questions.map((q: unknown, index: number) => {
                 const qObj = typeof q === "object" && q !== null ? q as Record<string, unknown> : {}
@@ -225,7 +233,7 @@ function renderFAQ(data: unknown) {
             </div>
           </div>
         )
-      })
+      })}
     </div>
   )
 }
@@ -374,7 +382,7 @@ function renderAIConfig(data: unknown) {
                   </div>
                 </div>
               )
-            })
+            })}
           </div>
         </div>
       )}
@@ -436,18 +444,13 @@ function renderTemplates(data: unknown) {
             )}
           </div>
         )
-      })
+      })}
     </div>
   )
 }
 
 function renderJSON(data: unknown) {
   if (!data || typeof data !== 'object') {
-    return <EmptyState message="暫無資料" icon="file" />
-  }
-  
-  const dataObj = data as Record<string, unknown>
-  if (!data) {
     return <EmptyState message="暫無資料" icon="file" />
   }
   
