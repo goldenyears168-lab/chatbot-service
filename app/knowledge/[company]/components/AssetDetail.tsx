@@ -22,7 +22,7 @@ interface AssetDetailProps {
 
 export function AssetDetail({ file }: AssetDetailProps) {
   const [activeTab, setActiveTab] = useState('overview')
-  const [highlightPath, setHighlightPath] = useState<string | null>(null)
+  const [highlightPath] = useState<string | null>(null)
 
   return (
     <div className="space-y-4">

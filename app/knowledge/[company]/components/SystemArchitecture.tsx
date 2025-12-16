@@ -240,63 +240,67 @@ interface MermaidDiagramProps {
   title: string
 }
 
+// 全局初始化标志
+let mermaidInitialized = false
+
 function MermaidDiagram({ diagram, title }: MermaidDiagramProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isInitialized, setIsInitialized] = useState(false)
+  const [svgContent, setSvgContent] = useState<string | null>(null)
 
   useEffect(() => {
-    // 初始化 mermaid（只初始化一次）
-    if (typeof window !== 'undefined' && !isInitialized) {
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: 'default',
-        securityLevel: 'loose',
-        flowchart: {
-          useMaxWidth: true,
-          htmlLabels: true,
-          curve: 'basis',
-        },
-      })
-      setIsInitialized(true)
-    }
-  }, [isInitialized])
-
-  useEffect(() => {
-    if (!ref.current || !isInitialized) return
+    if (typeof window === 'undefined') return
 
     const renderDiagram = async () => {
       try {
         setIsLoading(true)
         setError(null)
+        setSvgContent(null)
 
-        // 清空之前的内容
-        if (ref.current) {
-          ref.current.innerHTML = ''
+        // 只在第一次初始化 mermaid
+        if (!mermaidInitialized) {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+              useMaxWidth: true,
+              htmlLabels: true,
+              curve: 'basis',
+            },
+          })
+          mermaidInitialized = true
         }
 
         // 生成唯一 ID
-        const id = `mermaid-${Math.random().toString(36).substring(2, 11)}`
-        if (ref.current) {
-          ref.current.id = id
-          ref.current.textContent = diagram
+        const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 
-          // 渲染图表
-          await mermaid.run({
-            nodes: [ref.current],
-          })
+        // 使用 render 方法生成 SVG
+        const result = await mermaid.render(id, diagram)
+        
+        if (result && result.svg) {
+          setSvgContent(result.svg)
+        } else {
+          throw new Error('Mermaid render 返回了无效的结果')
         }
       } catch (err) {
         console.error('Mermaid render error:', err)
-        setError(err instanceof Error ? err.message : '渲染图表时出错')
+        const errorMessage = err instanceof Error ? err.message : '渲染图表时出错'
+        setError(errorMessage)
+        console.error('Diagram content:', diagram.substring(0, 200))
       } finally {
         setIsLoading(false)
       }
     }
 
-    renderDiagram()
-  }, [diagram, isInitialized])
+    // 延迟执行以确保组件已挂载
+    const timer = setTimeout(() => {
+      renderDiagram()
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [diagram])
 
   return (
     <div className="w-full">
@@ -313,15 +317,20 @@ function MermaidDiagram({ diagram, title }: MermaidDiagramProps) {
             <p className="text-sm">{error}</p>
             <details className="mt-2">
               <summary className="cursor-pointer text-sm">查看详情</summary>
-              <pre className="mt-2 text-xs bg-red-50 p-2 rounded overflow-auto">
+              <pre className="mt-2 text-xs bg-red-50 p-2 rounded overflow-auto max-h-40">
                 {error}
               </pre>
             </details>
           </div>
         )}
-        <div ref={ref} className="mermaid" style={{ minHeight: '300px' }}>
-          {!isLoading && !error && diagram}
-        </div>
+        {svgContent && !isLoading && !error && (
+          <div 
+            ref={ref} 
+            className="mermaid-container w-full flex justify-center"
+            style={{ minHeight: '300px' }}
+            dangerouslySetInnerHTML={{ __html: svgContent }}
+          />
+        )}
       </div>
     </div>
   )
