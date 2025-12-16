@@ -11,7 +11,7 @@ import { Toaster } from '@/components/ui/toast'
 import { useToast } from '@/components/ui/use-toast'
 import { ConsolePage, ConsoleHeader, ConsoleShell, ConsoleGrid, ConsoleSidebar, ConsoleMain, ConsoleCard } from '@/components/console/layout'
 import { ConsoleH1, ConsoleBody } from '@/components/console/typography'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface ClientConsoleProps {
   company: string
