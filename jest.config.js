@@ -1,67 +1,40 @@
-/**
- * Jest Configuration
- * 
- * 测试配置文件
- */
+// jest.config.js
+const nextJest = require('next/jest')
 
-export default {
-  preset: 'ts-jest/presets/default-esm',
-  testEnvironment: 'node',
-  
-  // 模块解析
-  extensionsToTreatAsEsm: ['.ts'],
+const createJestConfig = nextJest({
+  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
+  dir: './',
+})
+
+// Add any custom config to be passed to Jest
+const customJestConfig = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jest-environment-node',
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@/(.*)$': '<rootDir>/$1',
   },
-  
-  // 转换配置
-  transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        useESM: true,
-        tsconfig: {
-          module: 'ESNext',
-          moduleResolution: 'node',
-          esModuleInterop: true,
-        },
-      },
-    ],
-  },
-  
-  // 测试匹配
   testMatch: [
-    '**/tests/**/*.test.ts',
-    '**/functions/api/pipeline-v3/test/**/*.test.ts',
+    '**/__tests__/**/*.test.[jt]s?(x)',
+    '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
-  
-  // 覆盖率配置
   collectCoverageFrom: [
-    'functions/api/**/*.ts',
-    '!functions/api/**/*.test.ts',
-    '!functions/api/**/test/**',
-    '!functions/api/nodes-v3/**/test.ts',
+    'lib/**/*.{ts,tsx}',
+    'app/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+    '!**/.next/**',
+    '!**/__tests__/**',
   ],
-  
-  coverageThresholds: {
+  coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 75,
-      lines: 80,
-      statements: 80,
+      branches: 50,
+      functions: 50,
+      lines: 50,
+      statements: 50,
     },
   },
-  
-  // 超时设置
-  testTimeout: 30000,
-  
-  // 详细输出
-  verbose: true,
-  
-  // 忽略的路径
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/dist/',
-    '/.wrangler/',
-  ],
-};
+}
+
+// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
+module.exports = createJestConfig(customJestConfig)
+

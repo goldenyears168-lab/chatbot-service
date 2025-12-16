@@ -1,116 +1,68 @@
-# Chatbot Service 快速开始指南
+# 快速开始指南
 
-## 📍 当前项目位置
+## ✅ 已完成
 
-```
-/Users/jackm4/Documents/GitHub/chatbot-service/
-├── goldenyears/          # 好時有影 Chatbot Service
-└── README.md             # 架构文档
-```
+1. ✅ Next.js 项目已创建
+2. ✅ Supabase 环境变量已配置
+3. ✅ 数据库迁移 SQL 文件已准备
 
-## 🚀 开发工作流
+## 📋 下一步：执行数据库迁移
 
-### 本地开发（Golden Years）
+### 步骤 1: 在 Supabase 中执行 SQL 迁移
+
+1. 访问 [Supabase Dashboard](https://supabase.com/dashboard)
+2. 选择你的项目：`gprjocjpibsqhdbncvga`
+3. 进入 **SQL Editor**
+4. 点击 **New Query**
+5. 打开项目中的 `sql/01-init.sql` 文件
+6. 复制全部内容并粘贴到 SQL Editor
+7. 点击 **Run** 执行
+
+### 步骤 2: 验证数据库表
+
+在 Supabase Dashboard 中：
+
+1. 进入 **Table Editor**
+2. 确认以下表已创建：
+   - ✅ conversations
+   - ✅ messages
+   - ✅ users
+   - ✅ performance_metrics
+   - ✅ workflow_executions
+   - ✅ faq_queries
+   - ✅ intent_statistics
+
+### 步骤 3: 测试连接
+
+运行测试脚本：
 
 ```bash
-# 进入项目目录
-cd /Users/jackm4/Documents/GitHub/chatbot-service/goldenyears
+npm run test:supabase
+```
 
-# 安装依赖
-npm install
+如果看到 ✅ 表示连接成功！
 
-# 启动本地开发服务器
+### 步骤 4: 配置 Gemini API Key
+
+1. 访问 [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. 创建新的 API Key
+3. 更新 `.env.local` 文件：
+
+```bash
+GEMINI_API_KEY=your_actual_gemini_api_key
+```
+
+## 🚀 开始开发
+
+```bash
 npm run dev
-# 或
-npx wrangler pages dev
-
-# 服务器会在 http://localhost:8788 启动
 ```
 
-### 编译 CSS
-
-```bash
-cd /Users/jackm4/Documents/GitHub/chatbot-service/goldenyears
-npm run build:css
-```
-
-### 部署到 Cloudflare Pages
-
-```bash
-cd /Users/jackm4/Documents/GitHub/chatbot-service/goldenyears
-
-# 部署到 Production
-npm run deploy
-
-# 部署到 Preview
-npm run deploy:preview
-```
-
-## 🔗 连接方式
-
-### 主网站连接（goldenyearsphoto）
-
-`goldenyearsphoto` 项目通过以下方式连接：
-
-**生产环境**:
-```html
-<script 
-  src="https://chatbot-api.goldenyearsphoto.com/widget/loader.js" 
-  data-api-endpoint="https://chatbot-api.goldenyearsphoto.com/api/chat"
-  data-api-base-url="https://chatbot-api.goldenyearsphoto.com"
-  defer
-></script>
-```
-
-**本地开发**:
-```html
-<script 
-  src="http://localhost:8788/widget/loader.js" 
-  data-api-endpoint="http://localhost:8788/api/chat"
-  data-api-base-url="http://localhost:8788"
-  defer
-></script>
-```
-
-## ➕ 添加新公司项目
-
-### 1. 复制模板
-
-```bash
-cd /Users/jackm4/Documents/GitHub/chatbot-service
-cp -r goldenyears company-name
-cd company-name
-```
-
-### 2. 更新配置
-
-编辑以下文件：
-- `package.json` - 更新项目名称
-- `wrangler.toml` - 更新 Cloudflare Pages 项目名称
-- `knowledge/` - 更新知识库文件
-
-### 3. 部署
-
-```bash
-npm install
-npm run deploy
-```
-
-详细步骤请参考 [README.md](./README.md)
+访问 `http://localhost:3000` 查看应用。
 
 ## 📚 相关文档
 
-- [README.md](./README.md) - 完整架构文档
-- [ARCHITECTURE_AUDIT.md](./ARCHITECTURE_AUDIT.md) - 架构审计报告
-- [goldenyears/DEPLOYMENT.md](./goldenyears/DEPLOYMENT.md) - 部署指南
+- [数据库设置指南](./DATABASE_SETUP.md)
+- [环境变量配置](./ENV_CONFIG.md)
+- [迁移计划](../MIGRATION_PLAN.md)
 
-## ⚠️ 重要提示
-
-1. **路径移动不影响连接**: `goldenyearsphoto` 通过 URL 连接，不依赖本地路径
-2. **每个项目独立**: 每个公司的 chatbot service 是独立的 Cloudflare Pages 项目
-3. **环境变量**: 在 Cloudflare Dashboard 中设置，不要提交到 Git
-4. **CORS 配置**: 确保配置正确的 `CHATBOT_ALLOWED_ORIGINS`
-
----
-
-**最后更新**: 2024-01-XX

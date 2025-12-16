@@ -1,0 +1,48 @@
+{
+  "_file_description": "组织信息文件：包含组织基本信息、部门信息、联系方式等。对内顾问模式，不需要分店、营业时间等对外信息。",
+  "version": "1.0.0",
+  "last_updated": "2025-12-15",
+  "organization_name": "示例公司",
+  "organization_name_en": "Example Company",
+  "_section_departments": "部门信息：定义组织内的各个部门及其联系方式",
+  "departments": [
+    {
+      "id": "hr",
+      "name": "人力资源部",
+      "name_en": "Human Resources",
+      "contact": "hr@company.com",
+      "phone": "02-1234-5678",
+      "description": "负责员工招聘、培训、薪酬、福利等人力资源相关事务"
+    },
+    {
+      "id": "it",
+      "name": "IT 部门",
+      "name_en": "IT Department",
+      "contact": "it@company.com",
+      "phone": "02-1234-5679",
+      "description": "负责信息系统维护、技术支持、网络安全等 IT 相关事务"
+    },
+    {
+      "id": "finance",
+      "name": "财务部",
+      "name_en": "Finance Department",
+      "contact": "finance@company.com",
+      "phone": "02-1234-5680",
+      "description": "负责财务管理、报销、预算等财务相关事务"
+    },
+    {
+      "id": "admin",
+      "name": "行政部",
+      "name_en": "Administration",
+      "contact": "admin@company.com",
+      "phone": "02-1234-5681",
+      "description": "负责办公室管理、采购、设施维护等行政相关事务"
+    }
+  ],
+  "_section_contact_channels": "联系方式：组织的通用联系方式",
+  "contact_channels": {
+    "email": "info@company.com",
+    "phone": "02-1234-5678",
+    "address": "台北市信义区信义路五段7号"
+  }
+}

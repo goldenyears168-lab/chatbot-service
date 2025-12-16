@@ -3,9 +3,8 @@
 
 name = "chatbot-service"
 compatibility_date = "2024-01-01"
-
-# Pages 构建输出目录
-pages_build_output_dir = "."
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
 
 # Preview 环境配置
 [env.preview]
@@ -15,6 +14,3 @@ vars = { ENVIRONMENT = "preview" }
 [env.production]
 vars = { ENVIRONMENT = "production" }
 
-# 注意：D1 数据库和 Cron 触发器已禁用
-# 要启用这些功能，需要先创建真实的 D1 数据库
-# 参考文档：DEPLOYMENT_GUIDE.md

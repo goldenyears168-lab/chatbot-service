@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-15",
+  "services": [
+    {
+      "id": "online_course",
+      "name": "線上課程",
+      "name_en": "Online Course",
+      "one_line": "專業技能線上學習平台",
+      "price_range": "NT$500 - NT$5,000",
+      "price_min": 500,
+      "price_unit": "課程",
+      "pricing_model": "按課程計費"
+    },
+    {
+      "id": "certification",
+      "name": "證照考試",
+      "name_en": "Certification Exam",
+      "one_line": "各類專業證照考試服務",
+      "price_range": "NT$2,000 - NT$8,000",
+      "price_min": 2000,
+      "price_unit": "次",
+      "pricing_model": "按次計費"
+    }
+  ]
+}
