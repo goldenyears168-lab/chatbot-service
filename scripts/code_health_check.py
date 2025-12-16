@@ -21,6 +21,9 @@ class CodeHealthChecker:
             'timestamp': datetime.now().isoformat(),
             'typescript': {},
             'eslint': {},
+            'eslint_complexity': {},
+            'dead_code': {},
+            'dependency_health': {},
             'code_quality': {},
             'dependencies': {},
             'file_analysis': {},
@@ -78,7 +81,10 @@ class CodeHealthChecker:
         returncode, stdout, stderr = self.run_command(['npm', 'run', 'lint', '--', '--format', 'json'])
         
         issues = []
-        if returncode != 0:
+        error_count = 0
+        warning_count = 0
+        
+        if returncode != 0 or stdout:
             try:
                 # ESLint JSON 格式输出
                 output = stdout or stderr
@@ -88,22 +94,139 @@ class CodeHealthChecker:
                         eslint_data = json.loads(output)
                         for file_path, file_issues in eslint_data.items():
                             if isinstance(file_issues, list):
-                                issues.extend([f"{file_path}: {issue.get('message', '')}" for issue in file_issues])
+                                for issue in file_issues:
+                                    severity = issue.get('severity', 1)
+                                    if severity == 2:
+                                        error_count += 1
+                                    elif severity == 1:
+                                        warning_count += 1
+                                    issues.append({
+                                        'file': file_path,
+                                        'line': issue.get('line', 0),
+                                        'column': issue.get('column', 0),
+                                        'severity': 'error' if severity == 2 else 'warning',
+                                        'message': issue.get('message', ''),
+                                        'rule': issue.get('ruleId', '')
+                                    })
                     except:
                         # 如果不是 JSON，解析文本输出
                         for line in output.split('\n'):
                             if line.strip() and ('error' in line.lower() or 'warning' in line.lower()):
-                                issues.append(line.strip())
+                                issues.append({'message': line.strip()})
             except:
                 pass
         
         self.results['eslint'] = {
-            'status': 'pass' if returncode == 0 else 'fail',
+            'status': 'pass' if returncode == 0 and error_count == 0 else 'fail',
+            'error_count': error_count,
+            'warning_count': warning_count,
             'issue_count': len(issues),
             'issues': issues[:50]
         }
         
-        return returncode == 0
+        return returncode == 0 and error_count == 0
+    
+    def check_eslint_complexity(self):
+        """检查 ESLint 复杂度规则"""
+        print("🔍 检查 ESLint 复杂度规则...")
+        
+        # 运行 ESLint 并检查复杂度相关规则
+        returncode, stdout, stderr = self.run_command([
+            'npx', 'eslint', 
+            '--format', 'json',
+            'app', 'lib', 'components', 'types'
+        ])
+        
+        complexity_issues = []
+        complexity_rules = ['complexity', 'max-depth', 'max-lines', 'max-lines-per-function', 'max-nested-callbacks', 'max-params']
+        
+        if stdout:
+            try:
+                eslint_data = json.loads(stdout)
+                for file_path, file_issues in eslint_data.items():
+                    if isinstance(file_issues, list):
+                        for issue in file_issues:
+                            rule_id = issue.get('ruleId', '')
+                            if any(rule in rule_id.lower() for rule in complexity_rules):
+                                complexity_issues.append({
+                                    'file': file_path,
+                                    'line': issue.get('line', 0),
+                                    'rule': rule_id,
+                                    'message': issue.get('message', '')
+                                })
+            except:
+                pass
+        
+        self.results['eslint_complexity'] = {
+            'issue_count': len(complexity_issues),
+            'issues': complexity_issues[:30]
+        }
+    
+    def check_dead_code(self):
+        """使用 ts-prune 检查死代码"""
+        print("🔍 检查死代码 (ts-prune)...")
+        
+        returncode, stdout, stderr = self.run_command(['npx', 'ts-prune'])
+        
+        dead_code_issues = []
+        if stdout:
+            lines = stdout.split('\n')
+            for line in lines:
+                line = line.strip()
+                if line and not line.startswith('Found') and 'node_modules' not in line:
+                    # 解析 ts-prune 输出格式: file.ts:line - exportName
+                    if ' - ' in line:
+                        parts = line.split(' - ')
+                        if len(parts) == 2:
+                            file_info = parts[0].split(':')
+                            dead_code_issues.append({
+                                'file': file_info[0] if file_info else parts[0],
+                                'line': int(file_info[1]) if len(file_info) > 1 else 0,
+                                'export': parts[1].strip()
+                            })
+                    else:
+                        dead_code_issues.append({'file': line})
+        
+        self.results['dead_code'] = {
+            'status': 'pass' if len(dead_code_issues) == 0 else 'warning',
+            'issue_count': len(dead_code_issues),
+            'issues': dead_code_issues[:50]
+        }
+    
+    def check_dependency_health(self):
+        """使用 depcheck 检查依赖健康"""
+        print("🔍 检查依赖健康 (depcheck)...")
+        
+        returncode, stdout, stderr = self.run_command(['npx', 'depcheck', '--json'])
+        
+        unused_deps = []
+        missing_deps = []
+        
+        if stdout:
+            try:
+                depcheck_data = json.loads(stdout)
+                unused_deps = depcheck_data.get('dependencies', [])
+                missing_deps = list(depcheck_data.get('missing', {}).keys())
+            except:
+                # 如果不是 JSON，解析文本输出
+                if stdout:
+                    for line in stdout.split('\n'):
+                        if 'Unused dependencies' in line or 'Missing dependencies' in line:
+                            continue
+                        line = line.strip()
+                        if line and not line.startswith('*'):
+                            if 'Missing' in stdout:
+                                missing_deps.append(line)
+                            else:
+                                unused_deps.append(line)
+        
+        self.results['dependency_health'] = {
+            'status': 'pass' if len(unused_deps) == 0 and len(missing_deps) == 0 else 'warning',
+            'unused_dependencies': unused_deps[:30],
+            'missing_dependencies': missing_deps[:30],
+            'unused_count': len(unused_deps),
+            'missing_count': len(missing_deps)
+        }
     
     def analyze_file_complexity(self, file_path: Path) -> Dict[str, Any]:
         """分析单个文件的复杂度"""
@@ -173,27 +296,44 @@ class CodeHealthChecker:
                 for file_path in dir_path.rglob(f'*.{ext}'):
                     if 'node_modules' in str(file_path) or '.next' in str(file_path):
                         continue
-                
-                analysis = self.analyze_file_complexity(file_path)
-                if 'error' not in analysis:
-                    files_analyzed.append({
-                        'path': str(file_path.relative_to(self.project_root)),
-                        **analysis
-                    })
                     
-                    # 检查潜在问题
-                    if analysis.get('complexity_score', 0) > 50:
-                        issues.append(f"{file_path.relative_to(self.project_root)}: 复杂度较高 (score: {analysis['complexity_score']})")
-                    if analysis.get('max_nesting_depth', 0) > 5:
-                        issues.append(f"{file_path.relative_to(self.project_root)}: 嵌套深度过深 ({analysis['max_nesting_depth']})")
-                    if analysis.get('size_warning'):
-                        issues.append(f"{file_path.relative_to(self.project_root)}: {analysis['size_warning']}")
+                    analysis = self.analyze_file_complexity(file_path)
+                    if 'error' not in analysis:
+                        files_analyzed.append({
+                            'path': str(file_path.relative_to(self.project_root)),
+                            **analysis
+                        })
+                        
+                        # 检查潜在问题
+                        if analysis.get('complexity_score', 0) > 50:
+                            issues.append(f"{file_path.relative_to(self.project_root)}: 复杂度较高 (score: {analysis['complexity_score']})")
+                        if analysis.get('max_nesting_depth', 0) > 5:
+                            issues.append(f"{file_path.relative_to(self.project_root)}: 嵌套深度过深 ({analysis['max_nesting_depth']})")
+                        if analysis.get('size_warning'):
+                            issues.append(f"{file_path.relative_to(self.project_root)}: {analysis['size_warning']}")
         
         # 统计
         total_files = len(files_analyzed)
         avg_complexity = sum(f.get('complexity_score', 0) for f in files_analyzed) / total_files if total_files > 0 else 0
         large_files = [f for f in files_analyzed if f.get('file_size_kb', 0) > 50]
         complex_files = [f for f in files_analyzed if f.get('complexity_score', 0) > 30]
+        
+        # 代码行数统计
+        total_lines = sum(f.get('total_lines', 0) for f in files_analyzed)
+        total_code_lines = sum(f.get('code_lines', 0) for f in files_analyzed)
+        total_comment_lines = sum(f.get('comment_lines', 0) for f in files_analyzed)
+        total_blank_lines = sum(f.get('blank_lines', 0) for f in files_analyzed)
+        
+        # 函数和类统计
+        total_functions = sum(f.get('function_count', 0) for f in files_analyzed)
+        total_classes = sum(f.get('class_count', 0) for f in files_analyzed)
+        total_imports = sum(f.get('import_count', 0) for f in files_analyzed)
+        total_exports = sum(f.get('export_count', 0) for f in files_analyzed)
+        
+        # 文件大小分布
+        small_files = len([f for f in files_analyzed if f.get('file_size_kb', 0) < 10])
+        medium_files = len([f for f in files_analyzed if 10 <= f.get('file_size_kb', 0) < 30])
+        large_files_count = len([f for f in files_analyzed if f.get('file_size_kb', 0) >= 30])
         
         self.results['code_quality'] = {
             'total_files_analyzed': total_files,
@@ -202,7 +342,22 @@ class CodeHealthChecker:
             'complex_files_count': len(complex_files),
             'large_files': [{'path': f['path'], 'size_kb': f['file_size_kb']} for f in large_files[:10]],
             'complex_files': [{'path': f['path'], 'score': f['complexity_score']} for f in complex_files[:10]],
-            'issues': issues[:50]
+            'issues': issues[:50],
+            'code_statistics': {
+                'total_lines': total_lines,
+                'total_code_lines': total_code_lines,
+                'total_comment_lines': total_comment_lines,
+                'total_blank_lines': total_blank_lines,
+                'total_functions': total_functions,
+                'total_classes': total_classes,
+                'total_imports': total_imports,
+                'total_exports': total_exports,
+                'file_size_distribution': {
+                    'small': small_files,
+                    'medium': medium_files,
+                    'large': large_files_count
+                }
+            }
         }
     
     def check_dependencies(self):
@@ -364,9 +519,37 @@ class CodeHealthChecker:
             summary['overall_status'] = 'fail'
         
         # ESLint 错误
-        if self.results['eslint'].get('issue_count', 0) > 0:
-            summary['issues_found'] += self.results['eslint']['issue_count']
-            summary['warnings'].append(f"ESLint 问题: {self.results['eslint']['issue_count']} 个")
+        eslint_errors = self.results['eslint'].get('error_count', 0)
+        eslint_warnings = self.results['eslint'].get('warning_count', 0)
+        if eslint_errors > 0:
+            summary['issues_found'] += eslint_errors
+            summary['critical_issues'].append(f"ESLint 错误: {eslint_errors} 个")
+            summary['overall_status'] = 'fail'
+        if eslint_warnings > 0:
+            summary['issues_found'] += eslint_warnings
+            summary['warnings'].append(f"ESLint 警告: {eslint_warnings} 个")
+        
+        # ESLint 复杂度问题
+        complexity_issues = self.results['eslint_complexity'].get('issue_count', 0)
+        if complexity_issues > 0:
+            summary['issues_found'] += complexity_issues
+            summary['warnings'].append(f"ESLint 复杂度问题: {complexity_issues} 个")
+        
+        # 死代码
+        dead_code_count = self.results['dead_code'].get('issue_count', 0)
+        if dead_code_count > 0:
+            summary['issues_found'] += dead_code_count
+            summary['warnings'].append(f"死代码: {dead_code_count} 个未使用的导出")
+        
+        # 依赖健康
+        unused_deps = self.results['dependency_health'].get('unused_count', 0)
+        missing_deps = self.results['dependency_health'].get('missing_count', 0)
+        if unused_deps > 0:
+            summary['issues_found'] += unused_deps
+            summary['warnings'].append(f"未使用的依赖: {unused_deps} 个")
+        if missing_deps > 0:
+            summary['issues_found'] += missing_deps
+            summary['warnings'].append(f"缺失的依赖: {missing_deps} 个")
         
         # 安全问题
         if self.results['security'].get('hardcoded_secrets_count', 0) > 0:
@@ -391,13 +574,25 @@ class CodeHealthChecker:
         """运行所有检查"""
         print("🚀 开始代码健康度检查...\n")
         
+        # 基础检查
         self.check_typescript()
         self.check_eslint()
+        self.check_eslint_complexity()
+        
+        # 代码质量检查
         self.analyze_code_quality()
         self.check_unused_imports()
+        self.check_dead_code()
+        
+        # 依赖检查
         self.check_dependencies()
+        self.check_dependency_health()
+        
+        # 安全和测试
         self.check_security()
         self.check_test_coverage()
+        
+        # 生成总结
         self.generate_summary()
         
         print("\n✅ 检查完成!")
@@ -454,8 +649,77 @@ class CodeHealthChecker:
         eslint_result = self.results['eslint']
         status_emoji = "✅" if eslint_result.get('status') == 'pass' else "❌"
         md.append(f"**状态**: {status_emoji} {eslint_result.get('status', 'unknown').upper()}")
-        md.append(f"- **问题数**: {eslint_result.get('issue_count', 0)}")
+        md.append(f"- **错误数**: {eslint_result.get('error_count', 0)}")
+        md.append(f"- **警告数**: {eslint_result.get('warning_count', 0)}")
+        md.append(f"- **总问题数**: {eslint_result.get('issue_count', 0)}")
         md.append("")
+        
+        if eslint_result.get('issues'):
+            md.append("### 主要问题 (前 10 个)")
+            for issue in eslint_result['issues'][:10]:
+                if isinstance(issue, dict):
+                    md.append(f"- `{issue.get('file', 'unknown')}:{issue.get('line', 0)}` - {issue.get('message', '')} [{issue.get('rule', '')}]")
+                else:
+                    md.append(f"- {issue}")
+            md.append("")
+        
+        # ESLint 复杂度检查
+        complexity_result = self.results.get('eslint_complexity', {})
+        if complexity_result.get('issue_count', 0) > 0:
+            md.append("### 🔍 复杂度规则检查")
+            md.append("")
+            md.append(f"- **复杂度问题数**: {complexity_result.get('issue_count', 0)}")
+            if complexity_result.get('issues'):
+                md.append("### 复杂度问题 (前 10 个)")
+                for issue in complexity_result['issues'][:10]:
+                    md.append(f"- `{issue.get('file', 'unknown')}:{issue.get('line', 0)}` - {issue.get('rule', '')}: {issue.get('message', '')}")
+                md.append("")
+        
+        # 死代码检查
+        md.append("## 💀 死代码检查 (ts-prune)")
+        md.append("")
+        dead_code_result = self.results.get('dead_code', {})
+        status_emoji = "✅" if dead_code_result.get('status') == 'pass' else "⚠️"
+        md.append(f"**状态**: {status_emoji} {dead_code_result.get('status', 'unknown').upper()}")
+        md.append(f"- **未使用的导出**: {dead_code_result.get('issue_count', 0)}")
+        md.append("")
+        
+        if dead_code_result.get('issues'):
+            md.append("### 未使用的导出 (前 20 个)")
+            for issue in dead_code_result['issues'][:20]:
+                if isinstance(issue, dict):
+                    export_name = issue.get('export', 'unknown')
+                    file_path = issue.get('file', 'unknown')
+                    line = issue.get('line', 0)
+                    if line > 0:
+                        md.append(f"- `{file_path}:{line}` - {export_name}")
+                    else:
+                        md.append(f"- `{file_path}` - {export_name}")
+                else:
+                    md.append(f"- {issue}")
+            md.append("")
+        
+        # 依赖健康检查
+        md.append("## 📦 依赖健康检查 (depcheck)")
+        md.append("")
+        dep_health_result = self.results.get('dependency_health', {})
+        status_emoji = "✅" if dep_health_result.get('status') == 'pass' else "⚠️"
+        md.append(f"**状态**: {status_emoji} {dep_health_result.get('status', 'unknown').upper()}")
+        md.append(f"- **未使用的依赖**: {dep_health_result.get('unused_count', 0)}")
+        md.append(f"- **缺失的依赖**: {dep_health_result.get('missing_count', 0)}")
+        md.append("")
+        
+        if dep_health_result.get('unused_dependencies'):
+            md.append("### 未使用的依赖")
+            for dep in dep_health_result['unused_dependencies'][:20]:
+                md.append(f"- `{dep}`")
+            md.append("")
+        
+        if dep_health_result.get('missing_dependencies'):
+            md.append("### 缺失的依赖")
+            for dep in dep_health_result['missing_dependencies'][:20]:
+                md.append(f"- `{dep}`")
+            md.append("")
         
         # 代码质量
         md.append("## 📈 代码质量分析")
@@ -466,6 +730,30 @@ class CodeHealthChecker:
         md.append(f"- **大文件数** (>50KB): {cq.get('large_files_count', 0)}")
         md.append(f"- **复杂文件数** (score>30): {cq.get('complex_files_count', 0)}")
         md.append("")
+        
+        # 代码统计
+        stats = cq.get('code_statistics', {})
+        if stats:
+            md.append("### 代码统计")
+            md.append("")
+            md.append(f"- **总行数**: {stats.get('total_lines', 0):,}")
+            md.append(f"- **代码行数**: {stats.get('total_code_lines', 0):,}")
+            md.append(f"- **注释行数**: {stats.get('total_comment_lines', 0):,}")
+            md.append(f"- **空行数**: {stats.get('total_blank_lines', 0):,}")
+            md.append(f"- **函数数**: {stats.get('total_functions', 0)}")
+            md.append(f"- **类数**: {stats.get('total_classes', 0)}")
+            md.append(f"- **导入数**: {stats.get('total_imports', 0)}")
+            md.append(f"- **导出数**: {stats.get('total_exports', 0)}")
+            md.append("")
+            
+            dist = stats.get('file_size_distribution', {})
+            if dist:
+                md.append("### 文件大小分布")
+                md.append("")
+                md.append(f"- **小文件** (<10KB): {dist.get('small', 0)}")
+                md.append(f"- **中文件** (10-30KB): {dist.get('medium', 0)}")
+                md.append(f"- **大文件** (≥30KB): {dist.get('large', 0)}")
+                md.append("")
         
         if cq.get('large_files'):
             md.append("### 大文件列表")
