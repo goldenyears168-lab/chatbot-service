@@ -78,11 +78,11 @@ describe('formatErrorResponse', () => {
   const originalEnv = process.env.NODE_ENV
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv
+    ;(process.env as any).NODE_ENV = originalEnv
   })
 
   it('should format AppError in development', () => {
-    process.env.NODE_ENV = 'development'
+    ;(process.env as any).NODE_ENV = 'development'
     const error = new ValidationError('Invalid input', { field: 'email' })
     const response = formatErrorResponse(error)
     
@@ -92,7 +92,7 @@ describe('formatErrorResponse', () => {
   })
 
   it('should format AppError in production', () => {
-    process.env.NODE_ENV = 'production'
+    ;(process.env as any).NODE_ENV = 'production'
     const error = new ValidationError('Invalid input', { field: 'email' })
     const response = formatErrorResponse(error)
     
@@ -103,7 +103,7 @@ describe('formatErrorResponse', () => {
   })
 
   it('should format generic Error in development', () => {
-    process.env.NODE_ENV = 'development'
+    ;(process.env as any).NODE_ENV = 'development'
     const error = new Error('Something went wrong')
     const response = formatErrorResponse(error)
     
@@ -112,7 +112,7 @@ describe('formatErrorResponse', () => {
   })
 
   it('should format generic Error in production', () => {
-    process.env.NODE_ENV = 'production'
+    ;(process.env as any).NODE_ENV = 'production'
     const error = new Error('Something went wrong')
     const response = formatErrorResponse(error)
     

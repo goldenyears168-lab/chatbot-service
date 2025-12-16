@@ -1,8 +1,4 @@
 import { getCompanyConfig } from '@/lib/config'
-import Link from 'next/link'
-import { 
-  ArrowLeft
-} from 'lucide-react'
 import { DynamicChatbotWidget } from '@/app/demo/[company]/DynamicChatbotWidget'
 import { ErrorDisplay } from './ErrorDisplay'
 import { EmptyState } from './EmptyState'

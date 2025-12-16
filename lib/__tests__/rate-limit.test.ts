@@ -82,7 +82,7 @@ describe('checkRateLimit', () => {
     const config = {
       windowMs: 60000,
       maxRequests: 2,
-      keyGenerator: (req: Request) => 'custom-key',
+      keyGenerator: (_req: Request) => 'custom-key',
     }
     
     const result1 = await checkRateLimit(mockRequest, config)
