@@ -1,9 +1,1 @@
-{
-  "version": "1.0.0",
-  "last_updated": "2025-12-16",
-  "files": [
-    "1-company_info.json",
-    "2-ai_config.json",
-    "3-knowledge_base.json"
-  ]
-}
+["1-company_info.json","2-ai_config.json","3-knowledge_base.json","_manifest.json"]

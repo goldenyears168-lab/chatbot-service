@@ -1,12 +1,1 @@
-{
-  "version": "1.0.0",
-  "last_updated": "2025-12-16",
-  "files": [
-    "1-services.json",
-    "2-company_info.json",
-    "3-ai_config.json",
-    "3-personas.json",
-    "4-response_templates.json",
-    "5-faq_detailed.json"
-  ]
-}
+["1-services.json","2-company_info.json","3-ai_config.json","3-personas.json","4-response_templates.json","5-faq_detailed.json","_manifest.json"]

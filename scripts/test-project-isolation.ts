@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// @ts-nocheck
 /**
  * 专案隔离测试脚本
  * 
@@ -82,7 +83,7 @@ async function testProjectConfigs() {
     const content = await readFile(registryPath, 'utf-8')
     const registry = JSON.parse(content)
     
-    for (const [id, company] of Object.entries(registry.companies as any)) {
+    for (const [id, _company] of Object.entries(registry.companies as any)) {
       const configPath = join(process.cwd(), 'projects', id, 'config.json')
       
       if (!existsSync(configPath)) {
@@ -135,7 +136,7 @@ async function testKnowledgeBaseFiles() {
       '_manifest.json'
     ]
     
-    for (const [id, company] of Object.entries(registry.companies as any)) {
+    for (const [id, _company] of Object.entries(registry.companies as any)) {
       const knowledgeDir = join(process.cwd(), 'projects', id, 'knowledge')
       
       if (!existsSync(knowledgeDir)) {
