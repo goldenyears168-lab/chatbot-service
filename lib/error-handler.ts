@@ -1,7 +1,7 @@
 // lib/error-handler.ts
 // 统一错误处理
 
-import { logError as loggerError } from './logger'
+import { logger } from './logger'
 
 export class AppError extends Error {
   constructor(
@@ -81,10 +81,6 @@ export function formatErrorResponse(error: unknown): {
  */
 export function logError(error: unknown, context?: Record<string, unknown>) {
   // 使用统一的日志服务
-  loggerError(
-    error instanceof Error ? error.message : String(error),
-    error,
-    context
-  )
+  logger.error(error instanceof Error ? error.message : String(error), error, context)
 }
 

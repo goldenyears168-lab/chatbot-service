@@ -3,7 +3,6 @@
 
 // Supabase 客户端
 export * from './client'
-export * from './server'
 export * from './admin'
 
 // 数据库操作类

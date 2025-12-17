@@ -13,6 +13,15 @@ interface RateLimitStore {
 const store: RateLimitStore = {}
 
 /**
+ * 测试辅助：清空内存存储（避免测试之间相互污染）
+ */
+export function __resetRateLimitStore() {
+  for (const key of Object.keys(store)) {
+    delete store[key]
+  }
+}
+
+/**
  * 速率限制配置
  */
 interface RateLimitConfig {

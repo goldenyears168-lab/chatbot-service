@@ -3,6 +3,10 @@
 
 import { ComponentType } from 'react'
 
+// Vite-friendly dynamic imports: pre-index all possible project component modules.
+// This avoids `import(`...${var}...`)` limitations and keeps builds deterministic.
+const projectComponentModules = import.meta.glob('/projects/*/components/**/*.{ts,tsx}')
+
 /**
  * 加载项目特定的组件
  * @param companyId 项目ID
@@ -23,10 +27,22 @@ export async function loadProjectComponent<T = ComponentType<unknown>>(
     const normalizedPath = componentPath.includes('/') 
       ? componentPath 
       : `chatbot/${componentPath}`
-    
-    const projectComponent = await import(
-      `@/projects/${companyId}/components/${normalizedPath}`
-    )
+
+    const candidates = [
+      `/projects/${companyId}/components/${normalizedPath}.tsx`,
+      `/projects/${companyId}/components/${normalizedPath}.ts`,
+    ] as const
+
+    const importer =
+      projectComponentModules[candidates[0]] || projectComponentModules[candidates[1]]
+
+    if (!importer) {
+      throw new Error(
+        `Component module not found. Tried: ${candidates.join(', ')}`
+      )
+    }
+
+    const projectComponent: any = await importer()
     
     // 尝试多种导出方式
     // 1. 优先使用 default export

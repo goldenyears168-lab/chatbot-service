@@ -127,7 +127,7 @@ export async function loadKnowledgeData(
   }
   
   if (!baseUrl) {
-    throw new Error('Base URL is required. Please set NEXT_PUBLIC_BASE_URL environment variable in Cloudflare Pages settings.')
+    throw new Error('Base URL is required. Please set VITE_BASE_URL (for Vite) or provide a valid baseUrl when calling loadKnowledgeData().')
   }
 
   // 从 public 目录读取清单文件
@@ -135,9 +135,14 @@ export async function loadKnowledgeData(
   let fileList: string[] = []
   
   try {
-    const manifestResponse = await fetch(manifestUrl, {
-      cache: 'no-store'
-    })
+    let manifestResponse: Response
+    try {
+      // Cloudflare Pages/Workers fetch() does not support RequestInit.cache in this runtime.
+      // Using it throws and breaks knowledge loading.
+      manifestResponse = await fetch(manifestUrl)
+    } catch (e) {
+      throw e
+    }
     
     if (manifestResponse.ok) {
       fileList = await manifestResponse.json()
@@ -174,9 +179,13 @@ export async function loadKnowledgeData(
     jsonFiles.map(async (file) => {
       try {
         const fileUrl = `${baseUrl}/projects/${company}/knowledge/${file}`
-        const fileResponse = await fetch(fileUrl, {
-          cache: 'no-store'
-        })
+        let fileResponse: Response
+        try {
+          // Cloudflare Pages/Workers fetch() does not support RequestInit.cache in this runtime.
+          fileResponse = await fetch(fileUrl)
+        } catch (e) {
+          throw e
+        }
         
         if (!fileResponse.ok) {
           return null

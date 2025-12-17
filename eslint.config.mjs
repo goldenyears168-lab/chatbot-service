@@ -1,20 +1,15 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import { defineConfig, globalIgnores } from 'eslint/config'
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
+// Vite + React repo: keep ESLint minimal and compatible with the existing dependency set.
+export default defineConfig([
   globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    ".vercel/**",
-    "node_modules/**",
-    "next-env.d.ts",
+    'dist/**',
+    '.next/**',
+    '.vercel/**',
+    'coverage/**',
+    '_archive/**',
+    'node_modules/**',
+    'out/**',
+    'build/**',
   ]),
-]);
-
-export default eslintConfig;
+])

@@ -16,6 +16,7 @@ package-lock.json
 # production
 /build
 /.vercel/output
+/dist
 
 # misc
 .DS_Store
@@ -37,6 +38,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Reports / generated
+CODE_HEALTH_REPORT.md
 
 # Cloudflare
 .wrangler/

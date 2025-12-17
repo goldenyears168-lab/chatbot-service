@@ -1,11 +1,12 @@
 // lib/__tests__/rate-limit.test.ts
 // 速率限制单元测试
-import { checkRateLimit, createRateLimit } from '../rate-limit'
+import { __resetRateLimitStore, checkRateLimit, createRateLimit } from '../rate-limit'
 
 describe('checkRateLimit', () => {
   let mockRequest: Request
 
   beforeEach(() => {
+    __resetRateLimitStore()
     mockRequest = new Request('https://example.com/api', {
       headers: {
         'cf-connecting-ip': '192.168.1.1',
