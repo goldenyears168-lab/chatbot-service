@@ -69,6 +69,8 @@ const COMPANY_REGISTRY: CompanyRegistry = {
 
 /**
  * 获取公司配置
+ * 优先从 projects/{companyId}/config.json 加载完整配置
+ * 如果文件不存在，则从注册表返回基本信息
  */
 export async function getCompanyConfig(companyId: string): Promise<CompanyConfig | null> {
   try {
@@ -82,20 +84,33 @@ export async function getCompanyConfig(companyId: string): Promise<CompanyConfig
         const { join } = await import('path')
         const cwd = typeof process !== 'undefined' && process.cwd ? process.cwd() : ''
         
+        // 从 projects/{companyId}/config.json 加载完整配置
         const configPath = join(cwd, 'projects', companyId, 'config.json')
         const configData = await readFile(configPath, 'utf-8')
-        return JSON.parse(configData) as CompanyConfig
+        const config = JSON.parse(configData) as CompanyConfig
+        
+        // 验证配置完整性
+        if (config.id && config.name) {
+          logger.debug(`Loaded config for ${companyId} from ${configPath}`, { companyId })
+          return config
+        }
       } catch (fsError) {
         // 文件系统读取失败，继续使用注册表
+        logger.debug(`Failed to load config file for ${companyId}, using registry`, { 
+          companyId, 
+          error: fsError instanceof Error ? fsError.message : String(fsError) 
+        })
       }
     }
     
-    // Edge Runtime 环境，返回默认配置
+    // Edge Runtime 环境或文件读取失败，返回基于注册表的默认配置
     const company = COMPANY_REGISTRY.companies[companyId]
     if (!company) {
+      logger.warn(`Company not found in registry: ${companyId}`, { companyId })
       return null
     }
     
+    // 返回基本配置（不包含 allowedOrigins 等完整配置）
     return {
       id: company.id,
       name: company.name,
@@ -117,6 +132,8 @@ export async function getCompanyConfig(companyId: string): Promise<CompanyConfig
 
 /**
  * 获取公司注册表
+ * 优先从 projects/registry.json 加载
+ * 如果文件不存在，则返回缓存的注册表
  */
 export async function getCompanyRegistry(): Promise<CompanyRegistry | null> {
   try {
@@ -128,15 +145,29 @@ export async function getCompanyRegistry(): Promise<CompanyRegistry | null> {
         const { readFile } = await import('fs/promises')
         const { join } = await import('path')
         const cwd = typeof process !== 'undefined' && process.cwd ? process.cwd() : ''
+        
+        // 从 projects/registry.json 加载注册表
         const registryPath = join(cwd, 'projects', 'registry.json')
         const registryData = await readFile(registryPath, 'utf-8')
-        return JSON.parse(registryData) as CompanyRegistry
+        const registry = JSON.parse(registryData) as CompanyRegistry
+        
+        // 验证注册表格式
+        if (registry.version && registry.companies) {
+          logger.debug(`Loaded registry from ${registryPath}`, { 
+            version: registry.version, 
+            companies: Object.keys(registry.companies).length 
+          })
+          return registry
+        }
       } catch (fsError) {
-        // 文件系统读取失败，继续使用注册表
+        // 文件系统读取失败，继续使用缓存的注册表
+        logger.debug('Failed to load registry file, using cached registry', { 
+          error: fsError instanceof Error ? fsError.message : String(fsError) 
+        })
       }
     }
     
-    // Edge Runtime 环境，返回缓存的注册表
+    // Edge Runtime 环境或文件读取失败，返回缓存的注册表
     return COMPANY_REGISTRY
   } catch (error) {
     logger.error('Failed to load company registry', error)

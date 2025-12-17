@@ -1,0 +1,18 @@
+{
+  "id": "bonus-advisor",
+  "name": "年終獎金顧問",
+  "name_en": "Bonus Advisor",
+  "allowedOrigins": [
+    "https://*.pages.dev",
+    "http://localhost:8080",
+    "http://localhost:8788"
+  ],
+  "widgetConfig": {
+    "theme": "light",
+    "locale": "zh-TW"
+  },
+  "apiConfig": {
+    "useSharedApiKey": true,
+    "apiKeyEnv": "GEMINI_API_KEY"
+  }
+}

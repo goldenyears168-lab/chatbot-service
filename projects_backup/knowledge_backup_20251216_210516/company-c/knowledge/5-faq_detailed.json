@@ -1,0 +1,16 @@
+{
+  "faqs": [
+    {
+      "id": "faq_1",
+      "question": "你們提供哪些服務？",
+      "answer": "我們提供雲端主機服務和網域註冊服務，支援24小時技術支援。",
+      "category": "服務介紹"
+    },
+    {
+      "id": "faq_2",
+      "question": "如何取得技術支援？",
+      "answer": "您可以透過線上客服系統 https://support.company-c.com 或即時聊天功能聯繫我們，我們提供24小時服務。",
+      "category": "技術支援"
+    }
+  ]
+}
